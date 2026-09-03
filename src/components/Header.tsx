@@ -1,34 +1,34 @@
 import Link from "next/link";
+import { Package2, Sparkles } from "lucide-react";
 
 export function Header() {
   return (
-    <header className="border-b border-black bg-[#F4F4F0] text-black font-mono text-xs select-none">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-12 flex items-center justify-between">
-        {/* Brand Industrial Badge */}
-        <Link href="/" className="flex items-center gap-3 group">
-          <div className="bg-black text-white px-2 py-0.5 font-bold tracking-widest text-[11px]">
-            OBROOL
+    <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-zinc-100">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+        {/* Brand */}
+        <Link href="/" className="flex items-center gap-2.5 group">
+          <div className="w-9 h-9 rounded-xl bg-zinc-950 text-white flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
+            <Package2 className="w-5 h-5" />
           </div>
-          <div className="flex items-center gap-1.5 font-bold tracking-wider text-zinc-800">
-            <span>MANIFEST // EKSPEDISI</span>
-            <span className="hidden sm:inline text-zinc-400 font-normal">[ID-LOGISTICS]</span>
+          <div className="flex flex-col">
+            <span className="text-sm font-bold text-zinc-900 tracking-tight leading-tight">
+              Cek Resi & Ongkir
+            </span>
+            <span className="text-[11px] text-zinc-400 font-medium">
+              by Obrool
+            </span>
           </div>
         </Link>
 
-        {/* System Telemetry & External Link */}
-        <div className="flex items-center gap-4 text-[11px]">
-          <div className="hidden md:flex items-center gap-2 text-zinc-600">
-            <span className="w-2 h-2 bg-emerald-600 rounded-none inline-block animate-pulse" />
-            <span className="font-semibold">SYS.STATUS: OPERATIONAL</span>
-          </div>
-
+        {/* Action Link */}
+        <div className="flex items-center gap-3">
           <a
             href="https://obrool.com"
             target="_blank"
             rel="noopener noreferrer"
-            className="border border-black px-2.5 py-1 font-bold hover:bg-black hover:text-white transition-colors tracking-wider"
+            className="text-xs font-semibold text-zinc-600 hover:text-zinc-950 px-3 py-1.5 rounded-lg hover:bg-zinc-100 transition-colors"
           >
-            OBROOL.COM &rarr;
+            obrool.com
           </a>
         </div>
       </div>
