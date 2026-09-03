@@ -48,18 +48,50 @@ export function AiChatSection() {
         text: m.text,
       }));
 
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: text,
-          sessionId: sessionIdRef.current,
-          recentHistory,
-        }),
-      });
+      const obroolUrl = process.env.NEXT_PUBLIC_OBROOL_API_URL || "https://obrool.com";
+      const agentId = process.env.NEXT_PUBLIC_AGENT_ID || "cmtloaz4p0001ob70a96jvol3";
 
-      const data = await res.json();
-      const botReply = data.reply || "Maaf, belum dapat merespons saat ini.";
+      let botReply = "";
+
+      // 1. Coba koneksi langsung ke Obrool API (CORS '*') untuk performa instan tanpa limit timeout serverless
+      try {
+        const directRes = await fetch(`${obroolUrl}/api/adp/chat`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            agentId,
+            message: text,
+            sessionId: sessionIdRef.current,
+            guestDeviceId: sessionIdRef.current,
+            recentHistory,
+          }),
+        });
+
+        if (directRes.ok) {
+          const directData = await directRes.json();
+          if (directData.reply) {
+            botReply = directData.reply;
+          }
+        }
+      } catch {
+        // Fallback jika diblokir oleh ekstensi browser/adblocker
+      }
+
+      // 2. Fallback melalui endpoint proxy lokal (/api/chat)
+      if (!botReply) {
+        const res = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            message: text,
+            sessionId: sessionIdRef.current,
+            recentHistory,
+          }),
+        });
+
+        const data = await res.json();
+        botReply = data.reply || "Maaf, belum dapat merespons saat ini.";
+      }
 
       setMessages((prev) => [...prev, { role: "agent", text: botReply }]);
     } catch {
