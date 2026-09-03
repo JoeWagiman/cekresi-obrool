@@ -12,7 +12,7 @@ export function AiChatSection() {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: "agent",
-      text: "Halo! Saya Asisten AI Ekspedisi CekResi.id. Tanyakan ongkir, cek nomor resi, atau cari drop point kurir terdekat dengan bahasa santai. Ada yang bisa saya bantu?",
+      text: "Halo! Silakan tanyakan estimasi ongkos kirim, nomor resi kiriman, atau lokasi drop point kurir terdekat.",
     },
   ]);
   const [input, setInput] = useState("");
@@ -117,17 +117,16 @@ export function AiChatSection() {
   return (
     <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm overflow-hidden flex flex-col h-[560px]">
       {/* Header Chat */}
-      <div className="px-5 py-3.5 border-b border-zinc-100 bg-zinc-50/70 flex items-center justify-between">
+      <div className="px-5 py-3.5 border-b border-zinc-100 bg-white flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-sm">
+          <div className="w-8 h-8 rounded-xl bg-zinc-900 flex items-center justify-center text-white">
             <Bot className="w-4 h-4" />
           </div>
           <div>
-            <h3 className="text-xs font-bold text-zinc-900 flex items-center gap-1.5">
-              <span>Asisten AI Logistik</span>
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <h3 className="text-xs font-semibold text-zinc-900">
+              Asisten Ekspedisi
             </h3>
-            <span className="text-[0.6875rem] text-zinc-400">Paham bahasa santai, slang, & typo wilayah</span>
+            <span className="text-[0.6875rem] text-zinc-400">Tanya ongkir atau lacak resi</span>
           </div>
         </div>
 
@@ -155,7 +154,7 @@ export function AiChatSection() {
             >
               <div
                 className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-xs font-semibold ${
-                  isAgent ? "bg-blue-600 text-white" : "bg-zinc-800 text-white"
+                  isAgent ? "bg-zinc-900 text-white" : "bg-zinc-700 text-white"
                 }`}
               >
                 {isAgent ? <Bot className="w-4 h-4" /> : <User className="w-4 h-4" />}
@@ -165,7 +164,7 @@ export function AiChatSection() {
                 className={`rounded-2xl px-4 py-2.5 text-xs sm:text-sm leading-relaxed whitespace-pre-wrap ${
                   isAgent
                     ? "bg-zinc-100 text-zinc-800 rounded-tl-sm border border-zinc-200/70"
-                    : "bg-blue-600 text-white rounded-tr-sm shadow-sm"
+                    : "bg-zinc-900 text-white rounded-tr-sm shadow-sm"
                 }`}
               >
                 {m.text}
@@ -176,11 +175,11 @@ export function AiChatSection() {
 
         {loading && (
           <div className="flex gap-3 max-w-[80%] mr-auto items-center">
-            <div className="w-7 h-7 rounded-lg bg-blue-600 text-white flex items-center justify-center flex-shrink-0">
+            <div className="w-7 h-7 rounded-lg bg-zinc-900 text-white flex items-center justify-center flex-shrink-0">
               <Bot className="w-4 h-4" />
             </div>
             <div className="bg-zinc-100 border border-zinc-200/70 rounded-2xl rounded-tl-sm px-4 py-2.5 flex items-center gap-2 text-xs text-zinc-500">
-              <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-600" />
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-zinc-900" />
               <span>Memeriksa database ekspedisi...</span>
             </div>
           </div>
@@ -189,14 +188,14 @@ export function AiChatSection() {
 
       {/* Suggested Quick Questions */}
       <div className="px-4 py-2 bg-zinc-50/60 border-t border-zinc-100 flex items-center gap-1.5 overflow-x-auto text-[0.6875rem] no-scrollbar">
-        <Sparkles className="w-3.5 h-3.5 text-amber-500 flex-shrink-0 ml-1" />
-        <span className="text-zinc-400 font-medium whitespace-nowrap">Coba tanyakan:</span>
+        <Sparkles className="w-3.5 h-3.5 text-zinc-400 flex-shrink-0 ml-1" />
+        <span className="text-zinc-400 font-medium whitespace-nowrap">Contoh pertanyaan:</span>
         {sampleQuestions.map((q, i) => (
           <button
             key={i}
             type="button"
             onClick={() => handleSend(q)}
-            className="px-2.5 py-1 bg-white hover:bg-blue-50 border border-zinc-200 hover:border-blue-300 text-zinc-600 hover:text-blue-700 rounded-full whitespace-nowrap transition-colors"
+            className="px-2.5 py-1 bg-white hover:bg-zinc-100 border border-zinc-200 text-zinc-600 hover:text-zinc-900 rounded-full whitespace-nowrap transition-colors"
           >
             {q}
           </button>
@@ -215,13 +214,13 @@ export function AiChatSection() {
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Ketik pertanyaan atau rute pengiriman (misal: ongkir pwt ke jkt 2kg)..."
-          className="flex-1 px-4 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-xs sm:text-sm text-zinc-900 outline-none focus:bg-white focus:border-blue-600 transition-all placeholder:text-zinc-400"
+          placeholder="Ketik rute atau pertanyaan (misal: ongkir Sokaraja ke Solo 3kg)..."
+          className="flex-1 px-4 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-xs sm:text-sm text-zinc-900 outline-none focus:bg-white focus:border-zinc-900 transition-all placeholder:text-zinc-400"
         />
         <button
           type="submit"
           disabled={loading || !input.trim()}
-          className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold shadow-sm transition-all disabled:opacity-50 flex items-center justify-center"
+          className="px-4 py-2.5 bg-zinc-900 hover:bg-zinc-800 text-white rounded-xl text-sm font-medium transition-all disabled:opacity-50 flex items-center justify-center"
         >
           <Send className="w-4 h-4" />
         </button>

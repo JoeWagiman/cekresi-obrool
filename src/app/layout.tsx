@@ -5,19 +5,14 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Cek Resi & Ongkir Ekspedisi Cepat Indonesia — CekResi.id",
-  description:
-    "Cek resi paket dan tarif ongkir resmi terlengkap dari JNE, J&T, SiCepat, POS Indonesia, Anteraja, Wahana, Lion Parcel secara realtime dengan dukungan AI CS Ekspedisi 24/7.",
+  title: "Cek Resi & Ongkos Kirim — Obrool",
+  description: "Lacak nomor resi kiriman dan periksa perkiraan tarif ongkir kurir di Indonesia.",
   keywords: [
     "Cek Resi",
     "Cek Ongkir",
     "Lacak Paket",
-    "Tarif JNE",
-    "Tarif J&T",
-    "Tarif SiCepat",
-    "Tarif POS",
-    "Ekspedisi Indonesia",
-    "Bot Cek Resi",
+    "Tarif Kurir",
+    "Obrool",
   ],
   icons: {
     icon: "/favicon.ico",

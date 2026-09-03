@@ -144,10 +144,10 @@ export function ShippingRateSection() {
           <button
             type="submit"
             disabled={loading || !origin.trim() || !destination.trim()}
-            className="w-full sm:w-auto px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl text-sm shadow-sm transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+            className="w-full sm:w-auto px-6 py-2.5 bg-zinc-900 hover:bg-zinc-800 text-white font-medium rounded-xl text-sm transition-all disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
-            <span>Cek Tarif Ongkir</span>
+            <span>Cek Tarif</span>
           </button>
         </div>
       </form>

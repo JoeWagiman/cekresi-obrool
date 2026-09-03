@@ -112,7 +112,7 @@ export function TrackingSection() {
               <button
                 type="submit"
                 disabled={loading || !awb.trim()}
-                className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl text-sm shadow-sm transition-all disabled:opacity-50 flex items-center gap-2 whitespace-nowrap"
+                className="px-5 py-2.5 bg-zinc-900 hover:bg-zinc-800 text-white font-medium rounded-xl text-sm transition-all disabled:opacity-50 flex items-center gap-2 whitespace-nowrap"
               >
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
                 <span>Lacak</span>
