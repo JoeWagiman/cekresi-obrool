@@ -1,4 +1,41 @@
 import { NextResponse } from "next/server";
+import { checkShippingCost } from "@/lib/logistics/binderbyte";
+
+export const maxDuration = 30;
+
+export async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const origin = searchParams.get("origin")?.trim();
+    const destination = searchParams.get("destination")?.trim();
+    const weightParam = searchParams.get("weight")?.trim() || "1000";
+    const courier = searchParams.get("courier")?.trim().toLowerCase() || "all";
+
+    if (!origin || !destination) {
+      return NextResponse.json(
+        { error: "Kota/kecamatan asal dan tujuan wajib diisi" },
+        { status: 400 }
+      );
+    }
+
+    const weightGrams = Math.max(100, parseInt(weightParam, 10) || 1000);
+    const result = await checkShippingCost(courier, origin, destination, weightGrams);
+
+    return NextResponse.json({
+      status: 200,
+      origin: result.origin,
+      destination: result.destination,
+      weight: result.weightGrams / 1000,
+      rates: result.services,
+    });
+  } catch (error) {
+    console.error("[Cost API GET Error]", error);
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Gagal memeriksa ongkos kirim" },
+      { status: 500 }
+    );
+  }
+}
 
 export async function POST(request: Request) {
   try {
@@ -12,61 +49,20 @@ export async function POST(request: Request) {
       );
     }
 
-    const apiKey =
-      process.env.BINDERBYTE_API_KEY ||
-      "sk_sq00lz6ufwyrbnb16jt0mfuhlekkwauv5cogfgsh4wxwrn4np8xqbmoxzhtravw6";
-
-    const couriersToQuery = courier ? [courier] : ["jne", "jnt", "sicepat", "pos", "tiki", "wahana"];
-    const results: Array<{ courier: string; service: string; description: string; cost: number; etd: string }> = [];
-
-    // Query Binderbyte cost API
-    for (const c of couriersToQuery) {
-      try {
-        const url = `https://api.binderbyte.com/v1/cost?api_key=${apiKey}&courier=${c}&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}&weight=${weight || 1}`;
-        const res = await fetch(url, { next: { revalidate: 300 } });
-        const data = await res.json();
-
-        if (data.status === 200 && Array.isArray(data.data?.costs)) {
-          for (const item of data.data.costs) {
-            results.push({
-              courier: data.data.courier || c.toUpperCase(),
-              service: item.service,
-              description: item.description,
-              cost: item.cost,
-              etd: item.etd,
-            });
-          }
-        }
-      } catch (err) {
-        console.warn(`[Cost Fetch ${c} failed]`, err);
-      }
-    }
-
-    if (results.length === 0) {
-      return NextResponse.json(
-        {
-          error: "Tarif belum ditemukan untuk rute ini. Pastikan nama kota/kecamatan ditulis lengkap atau tanyakan langsung ke Asisten AI.",
-        },
-        { status: 404 }
-      );
-    }
-
-    // Sort by cheapest cost
-    results.sort((a, b) => a.cost - b.cost);
+    const weightGrams = Math.max(100, parseInt(String(weight), 10) || 1000);
+    const result = await checkShippingCost(courier || "all", origin, destination, weightGrams);
 
     return NextResponse.json({
       status: 200,
-      data: {
-        origin,
-        destination,
-        weight: weight || 1,
-        costs: results,
-      },
+      origin: result.origin,
+      destination: result.destination,
+      weight: result.weightGrams / 1000,
+      rates: result.services,
     });
   } catch (error) {
-    console.error("[Cost API Error]", error);
+    console.error("[Cost API POST Error]", error);
     return NextResponse.json(
-      { error: "Terjadi kesalahan saat memeriksa ongkos kirim" },
+      { error: error instanceof Error ? error.message : "Gagal memeriksa ongkos kirim" },
       { status: 500 }
     );
   }

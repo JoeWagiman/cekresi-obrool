@@ -216,16 +216,20 @@ export default function Home() {
       }
 
       if (!botReply) {
-        const res = await fetch("/api/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            message: rawText,
-            sessionId: sessionIdRef.current,
-          }),
-        });
-        const data = await res.json();
-        botReply = data.reply || "Maaf, belum dapat memproses pertanyaan saat ini.";
+        try {
+          const res = await fetch("/api/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              message: rawText,
+              sessionId: sessionIdRef.current,
+            }),
+          });
+          const data = await res.json();
+          botReply = data.reply || "Maaf, belum dapat memproses pertanyaan saat ini.";
+        } catch {
+          botReply = "Maaf, koneksi ke asisten sedang sibuk. Silakan coba kembali.";
+        }
       }
 
       setStream((prev) => [
@@ -236,13 +240,14 @@ export default function Home() {
           replyText: botReply,
         },
       ]);
-    } catch {
+    } catch (err) {
+      console.error("[Search Error]", err);
       setStream((prev) => [
         ...prev,
         {
           id: "err_" + Date.now(),
           type: "error",
-          replyText: "Terjadi gangguan saat memproses pencarian. Silakan coba kembali.",
+          replyText: err instanceof Error ? err.message : "Terjadi gangguan saat memproses pencarian. Silakan coba kembali.",
         },
       ]);
     } finally {
