@@ -7,15 +7,12 @@ import {
   Search,
   Package,
   Calculator,
-  MessageSquare,
   ArrowRight,
   ArrowRightLeft,
   Loader2,
   Clock,
   Sparkles,
-  User,
   RotateCcw,
-  CheckCircle2,
   AlertCircle
 } from "lucide-react";
 
@@ -125,7 +122,6 @@ export default function Home() {
 
       if (rawText.toLowerCase().startsWith("lacak") || rawText.toLowerCase().startsWith("resi") || isPureDigits) {
         const extractedAwb = awbMatch ? awbMatch[1] : rawText.trim();
-        // Detect courier if mentioned
         let detectedCourier = "jne";
         for (const c of COURIER_LIST) {
           if (rawText.toLowerCase().includes(c.id) || rawText.toLowerCase().includes(c.name.toLowerCase())) {
@@ -179,8 +175,8 @@ export default function Home() {
               id: "res_" + Date.now(),
               type: "rate_result",
               rates: sortedRates,
-              origin: originClean,
-              destination: destClean,
+              origin: data.origin || originClean,
+              destination: data.destination || destClean,
               weight: weightClean,
             },
           ]);
@@ -294,8 +290,8 @@ export default function Home() {
           id: "res_" + Date.now(),
           type: "rate_result",
           rates: rawRates,
-          origin: costOrigin.trim(),
-          destination: costDest.trim(),
+          origin: data.origin || costOrigin.trim(),
+          destination: data.destination || costDest.trim(),
           weight: costWeight,
         },
       ]);
@@ -364,30 +360,31 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#FDFDFC] text-zinc-900 font-sans selection:bg-zinc-900 selection:text-white">
+    <div className="min-h-screen flex flex-col bg-[#FBFBFA] text-zinc-900 font-sans selection:bg-zinc-900 selection:text-white">
       <Header />
 
-      <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 py-10 sm:py-14 flex flex-col">
+      {/* Main Wide Container */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-16 flex flex-col">
         {/* Editorial Heading */}
-        <div className="text-center space-y-3 mb-8">
-          <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-zinc-950">
+        <div className="text-center space-y-3 mb-10 max-w-3xl mx-auto">
+          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-zinc-950 leading-[1.1]">
             Cek Resi & Tarif Ongkir
           </h1>
-          <p className="text-base text-zinc-500 max-w-lg mx-auto">
-            Ketik rute tujuan, tempel nomor resi paket, atau tanyakan apa saja seputar pengiriman.
+          <p className="text-base sm:text-lg text-zinc-500 leading-relaxed">
+            Ketik rute tujuan, tempel nomor resi paket, atau tanyakan apa saja seputar pengiriman domestik.
           </p>
         </div>
 
-        {/* Omnibox Floating Container */}
-        <div className="bg-white rounded-3xl border border-zinc-200 shadow-xl shadow-zinc-200/40 p-3 sm:p-4 mb-8 transition-all">
+        {/* Omnibox Floating Container (Wide & Spacious) */}
+        <div className="bg-white rounded-3xl border border-zinc-200/90 shadow-xl shadow-zinc-200/30 p-4 sm:p-5 mb-10 transition-all max-w-5xl w-full mx-auto">
           {/* Mode Pill Selectors */}
-          <div className="flex items-center gap-1.5 pb-3 border-b border-zinc-100 overflow-x-auto no-scrollbar">
+          <div className="flex items-center gap-2 pb-3.5 border-b border-zinc-100 overflow-x-auto no-scrollbar">
             <button
               type="button"
               onClick={() => setActiveTab("auto")}
-              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all ${
                 activeTab === "auto"
-                  ? "bg-zinc-900 text-white"
+                  ? "bg-zinc-950 text-white shadow-sm"
                   : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200/70"
               }`}
             >
@@ -398,9 +395,9 @@ export default function Home() {
             <button
               type="button"
               onClick={() => setActiveTab("cost")}
-              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all ${
                 activeTab === "cost"
-                  ? "bg-zinc-900 text-white"
+                  ? "bg-zinc-950 text-white shadow-sm"
                   : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200/70"
               }`}
             >
@@ -411,9 +408,9 @@ export default function Home() {
             <button
               type="button"
               onClick={() => setActiveTab("track")}
-              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all ${
                 activeTab === "track"
-                  ? "bg-zinc-900 text-white"
+                  ? "bg-zinc-950 text-white shadow-sm"
                   : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200/70"
               }`}
             >
@@ -436,13 +433,13 @@ export default function Home() {
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Contoh: Sokaraja ke Solo 3kg, atau lacak JNE 582230008329223..."
-                className="flex-1 text-base sm:text-lg font-medium text-zinc-900 placeholder:text-zinc-400 outline-none bg-transparent"
+                placeholder="Ketik apa saja, misal: Sokaraja ke Solo 3kg, atau lacak JNE 582230008329223..."
+                className="flex-1 text-base sm:text-xl font-medium text-zinc-900 placeholder:text-zinc-400 outline-none bg-transparent"
               />
               <button
                 type="submit"
                 disabled={loading || !query.trim()}
-                className="w-10 h-10 rounded-2xl bg-zinc-950 hover:bg-zinc-800 text-white flex items-center justify-center transition-all disabled:opacity-30 flex-shrink-0"
+                className="w-11 h-11 rounded-2xl bg-zinc-950 hover:bg-zinc-800 text-white flex items-center justify-center transition-all disabled:opacity-30 flex-shrink-0 shadow-sm"
               >
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4" />}
               </button>
@@ -451,7 +448,7 @@ export default function Home() {
 
           {activeTab === "cost" && (
             <form onSubmit={handleCostSubmit} className="pt-3 px-2 space-y-3">
-              <div className="grid grid-cols-1 sm:grid-cols-11 gap-2.5 items-center">
+              <div className="grid grid-cols-1 sm:grid-cols-11 gap-3 items-center">
                 <div className="sm:col-span-4">
                   <label className="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1">Kota Asal</label>
                   <input
@@ -459,7 +456,7 @@ export default function Home() {
                     value={costOrigin}
                     onChange={(e) => setCostOrigin(e.target.value)}
                     placeholder="Asal (Sokaraja)"
-                    className="w-full px-3.5 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-sm font-medium text-zinc-900 outline-none focus:bg-white focus:border-zinc-900"
+                    className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl text-sm sm:text-base font-medium text-zinc-900 outline-none focus:bg-white focus:border-zinc-900"
                   />
                 </div>
 
@@ -484,7 +481,7 @@ export default function Home() {
                     value={costDest}
                     onChange={(e) => setCostDest(e.target.value)}
                     placeholder="Tujuan (Surakarta)"
-                    className="w-full px-3.5 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-sm font-medium text-zinc-900 outline-none focus:bg-white focus:border-zinc-900"
+                    className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl text-sm sm:text-base font-medium text-zinc-900 outline-none focus:bg-white focus:border-zinc-900"
                   />
                 </div>
 
@@ -496,18 +493,18 @@ export default function Home() {
                     step="0.1"
                     value={costWeight}
                     onChange={(e) => setCostWeight(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-sm font-semibold text-zinc-900 outline-none focus:bg-white focus:border-zinc-900"
+                    className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl text-sm sm:text-base font-semibold text-zinc-900 outline-none focus:bg-white focus:border-zinc-900"
                   />
                 </div>
               </div>
 
-              <div className="flex justify-end pt-1">
+              <div className="flex justify-end pt-2">
                 <button
                   type="submit"
                   disabled={loading || !costOrigin.trim() || !costDest.trim()}
-                  className="px-6 py-2.5 bg-zinc-950 hover:bg-zinc-800 text-white text-xs font-semibold rounded-xl transition-all flex items-center gap-2 disabled:opacity-40"
+                  className="px-6 py-3 bg-zinc-950 hover:bg-zinc-800 text-white text-xs sm:text-sm font-semibold rounded-xl transition-all flex items-center gap-2 disabled:opacity-40 shadow-sm"
                 >
-                  {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Calculator className="w-3.5 h-3.5" />}
+                  {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Calculator className="w-4 h-4" />}
                   <span>Periksa Tarif</span>
                 </button>
               </div>
@@ -516,13 +513,13 @@ export default function Home() {
 
           {activeTab === "track" && (
             <form onSubmit={handleTrackSubmit} className="pt-3 px-2 space-y-3">
-              <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-center">
+              <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
                 <div className="sm:col-span-4">
                   <label className="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1">Ekspedisi</label>
                   <select
                     value={trackCourier}
                     onChange={(e) => setTrackCourier(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-sm font-medium text-zinc-900 outline-none focus:bg-white focus:border-zinc-900 cursor-pointer"
+                    className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl text-sm sm:text-base font-semibold text-zinc-900 outline-none focus:bg-white focus:border-zinc-900 cursor-pointer"
                   >
                     {COURIER_LIST.map((c) => (
                       <option key={c.id} value={c.id}>
@@ -540,15 +537,15 @@ export default function Home() {
                       value={trackAwb}
                       onChange={(e) => setTrackAwb(e.target.value)}
                       placeholder="Masukkan nomor resi..."
-                      className="flex-1 px-3.5 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-sm font-medium font-mono text-zinc-900 outline-none focus:bg-white focus:border-zinc-900"
+                      className="flex-1 px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl text-sm sm:text-base font-semibold font-mono text-zinc-900 outline-none focus:bg-white focus:border-zinc-900"
                     />
                     <button
                       type="submit"
                       disabled={loading || !trackAwb.trim()}
-                      className="px-5 py-2.5 bg-zinc-950 hover:bg-zinc-800 text-white text-xs font-semibold rounded-xl transition-all flex items-center gap-2 disabled:opacity-40 whitespace-nowrap"
+                      className="px-6 py-3 bg-zinc-950 hover:bg-zinc-800 text-white text-xs sm:text-sm font-semibold rounded-xl transition-all flex items-center gap-2 disabled:opacity-40 whitespace-nowrap shadow-sm"
                     >
-                      {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Search className="w-3.5 h-3.5" />}
-                      <span>Lacak</span>
+                      {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+                      <span>Lacak Resi</span>
                     </button>
                   </div>
                 </div>
@@ -559,34 +556,34 @@ export default function Home() {
 
         {/* Quick Suggestion Pills (Shown when no stream yet) */}
         {stream.length === 0 && (
-          <div className="text-center space-y-3 pt-2">
-            <span className="text-xs font-medium text-zinc-400">Contoh pencarian instan:</span>
-            <div className="flex flex-wrap justify-center gap-2">
+          <div className="text-center space-y-3 pt-2 max-w-4xl mx-auto">
+            <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Contoh pencarian instan:</span>
+            <div className="flex flex-wrap justify-center gap-2.5">
               <button
                 type="button"
                 onClick={() => handleAutoSubmit("Sokaraja ke Solo 3kg")}
-                className="px-3.5 py-1.5 rounded-full border border-zinc-200 bg-white hover:bg-zinc-50 text-xs font-medium text-zinc-700 shadow-2xs transition-colors"
+                className="px-4 py-2 rounded-full border border-zinc-200 bg-white hover:bg-zinc-50 text-xs sm:text-sm font-medium text-zinc-700 shadow-2xs transition-colors"
               >
                 Sokaraja ke Solo 3kg
               </button>
               <button
                 type="button"
                 onClick={() => handleAutoSubmit("Jakarta ke Surabaya 1kg")}
-                className="px-3.5 py-1.5 rounded-full border border-zinc-200 bg-white hover:bg-zinc-50 text-xs font-medium text-zinc-700 shadow-2xs transition-colors"
+                className="px-4 py-2 rounded-full border border-zinc-200 bg-white hover:bg-zinc-50 text-xs sm:text-sm font-medium text-zinc-700 shadow-2xs transition-colors"
               >
                 Jakarta ke Surabaya 1kg
               </button>
               <button
                 type="button"
                 onClick={() => handleAutoSubmit("Lacak JNE 582230008329223")}
-                className="px-3.5 py-1.5 rounded-full border border-zinc-200 bg-white hover:bg-zinc-50 text-xs font-medium text-zinc-700 shadow-2xs transition-colors"
+                className="px-4 py-2 rounded-full border border-zinc-200 bg-white hover:bg-zinc-50 text-xs sm:text-sm font-medium text-zinc-700 shadow-2xs transition-colors"
               >
                 Lacak JNE 582230008329223
               </button>
               <button
                 type="button"
                 onClick={() => handleAutoSubmit("Kirim paket kargo 50kg murah pakai kurir apa?")}
-                className="px-3.5 py-1.5 rounded-full border border-zinc-200 bg-white hover:bg-zinc-50 text-xs font-medium text-zinc-700 shadow-2xs transition-colors"
+                className="px-4 py-2 rounded-full border border-zinc-200 bg-white hover:bg-zinc-50 text-xs sm:text-sm font-medium text-zinc-700 shadow-2xs transition-colors"
               >
                 Kirim kargo 50kg pakai apa?
               </button>
@@ -594,15 +591,15 @@ export default function Home() {
           </div>
         )}
 
-        {/* Interactive Dynamic Stream of Results */}
+        {/* Interactive Dynamic Stream of Results (Wide Multi-Column Grid) */}
         {stream.length > 0 && (
-          <div className="space-y-6 pt-4 flex-1">
-            <div className="flex items-center justify-between pb-2 border-b border-zinc-100 text-xs text-zinc-400">
-              <span>Hasil Penelusuran</span>
+          <div className="space-y-8 pt-4 flex-1 w-full">
+            <div className="flex items-center justify-between pb-3 border-b border-zinc-200 text-xs sm:text-sm text-zinc-500">
+              <span className="font-semibold text-zinc-800">Hasil Penelusuran</span>
               <button
                 type="button"
                 onClick={handleResetSession}
-                className="flex items-center gap-1.5 text-zinc-500 hover:text-zinc-900 transition-colors font-medium"
+                className="flex items-center gap-1.5 text-zinc-500 hover:text-zinc-950 transition-colors font-medium px-3 py-1.5 rounded-lg hover:bg-zinc-200/60"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 <span>Bersihkan Layar</span>
@@ -614,37 +611,38 @@ export default function Home() {
               if (item.type === "query") {
                 return (
                   <div key={item.id} className="flex justify-end">
-                    <div className="px-5 py-3 rounded-2xl bg-zinc-900 text-white text-sm sm:text-base font-medium max-w-xl shadow-sm">
+                    <div className="px-6 py-3.5 rounded-2xl bg-zinc-950 text-white text-base sm:text-lg font-medium max-w-2xl shadow-sm">
                       {item.userText}
                     </div>
                   </div>
                 );
               }
 
-              // Shipping Rate Result Card
+              // Shipping Rate Result Card (3-4 Columns on Wide Screen!)
               if (item.type === "rate_result" && item.rates) {
                 return (
                   <div
                     key={item.id}
-                    className="bg-white border border-zinc-200 rounded-3xl p-6 sm:p-8 shadow-sm space-y-5 animate-in fade-in"
+                    className="bg-white border border-zinc-200 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6 animate-in fade-in"
                   >
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-100 pb-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-100 pb-5">
                       <div>
-                        <span className="text-xs font-bold uppercase tracking-wider text-zinc-400">Pilihan Tarif Resmi</span>
-                        <h3 className="text-xl sm:text-2xl font-bold text-zinc-950 mt-0.5">
+                        <span className="text-xs font-bold uppercase tracking-wider text-zinc-400">Pilihan Tarif Resmi Ekspedisi</span>
+                        <h3 className="text-2xl sm:text-3xl font-black text-zinc-950 mt-0.5">
                           {item.origin} &rarr; {item.destination}
                         </h3>
                       </div>
-                      <span className="text-xs font-semibold px-3 py-1 bg-zinc-100 text-zinc-700 rounded-full self-start sm:self-auto font-mono">
+                      <span className="text-xs sm:text-sm font-bold px-4 py-1.5 bg-zinc-100 text-zinc-800 rounded-full self-start sm:self-auto font-mono">
                         {item.weight} Kg
                       </span>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {/* Wide Multi-Column Grid for Rates */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                       {item.rates.map((r, i) => (
                         <div
                           key={i}
-                          className="p-4 rounded-2xl border border-zinc-200/80 bg-zinc-50/50 hover:bg-white hover:border-zinc-300 transition-all flex flex-col justify-between space-y-3"
+                          className="p-5 rounded-2xl border border-zinc-200/90 bg-zinc-50/60 hover:bg-white hover:border-zinc-300 transition-all flex flex-col justify-between space-y-4"
                         >
                           <div>
                             <div className="flex items-center justify-between">
@@ -652,18 +650,18 @@ export default function Home() {
                                 {r.courier}
                               </span>
                               {r.etd && (
-                                <span className="text-[11px] font-medium text-zinc-600 bg-white px-2 py-0.5 rounded-md border border-zinc-200">
+                                <span className="text-[11px] font-bold text-zinc-700 bg-white px-2 py-0.5 rounded-md border border-zinc-200">
                                   {r.etd} hari
                                 </span>
                               )}
                             </div>
-                            <h4 className="text-base font-bold text-zinc-900 mt-1">{r.service}</h4>
-                            {r.description && <p className="text-xs text-zinc-400 line-clamp-1">{r.description}</p>}
+                            <h4 className="text-base font-bold text-zinc-900 mt-1.5">{r.service}</h4>
+                            {r.description && <p className="text-xs text-zinc-400 line-clamp-1 mt-0.5">{r.description}</p>}
                           </div>
 
-                          <div className="pt-2 border-t border-zinc-200/60 flex items-baseline justify-between">
-                            <span className="text-xs text-zinc-400 font-medium">Harga</span>
-                            <span className="text-xl font-black font-mono text-zinc-950">
+                          <div className="pt-3 border-t border-zinc-200/60 flex items-baseline justify-between">
+                            <span className="text-xs text-zinc-400 font-medium uppercase tracking-wider">Tarif</span>
+                            <span className="text-2xl font-black font-mono text-zinc-950">
                               Rp {r.cost.toLocaleString("id-ID")}
                             </span>
                           </div>
@@ -674,7 +672,7 @@ export default function Home() {
                 );
               }
 
-              // Tracking Result Card
+              // Tracking Result Card (Split Layout on Wide Screens)
               if (item.type === "track_result" && item.trackingData?.data) {
                 const data = item.trackingData.data;
                 const isDelivered = data.summary?.status?.toUpperCase()?.includes("DELIVERED");
@@ -689,13 +687,13 @@ export default function Home() {
                         <span className="text-xs font-bold uppercase tracking-wider text-zinc-400">
                           {data.summary?.courier || item.courier} Express
                         </span>
-                        <h3 className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-zinc-950 mt-0.5">
+                        <h3 className="text-2xl sm:text-4xl font-black font-mono tracking-tight text-zinc-950 mt-0.5">
                           {item.awb}
                         </h3>
                       </div>
 
                       <span
-                        className={`text-xs sm:text-sm font-bold px-3.5 py-1.5 rounded-full self-start sm:self-auto ${
+                        className={`text-xs sm:text-sm font-bold px-4 py-2 rounded-full self-start sm:self-auto ${
                           isDelivered
                             ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
                             : "bg-blue-50 text-blue-700 border border-blue-200"
@@ -705,48 +703,56 @@ export default function Home() {
                       </span>
                     </div>
 
-                    {(data.detail?.origin || data.detail?.destination) && (
-                      <div className="grid grid-cols-2 gap-4 p-4 bg-zinc-50 rounded-2xl border border-zinc-100 text-sm">
-                        <div>
-                          <span className="text-xs font-medium text-zinc-400 uppercase tracking-wider block">Asal</span>
-                          <span className="text-base font-bold text-zinc-900 mt-0.5 block">{data.detail.origin || "-"}</span>
-                        </div>
-                        <div>
-                          <span className="text-xs font-medium text-zinc-400 uppercase tracking-wider block">Tujuan</span>
-                          <span className="text-base font-bold text-zinc-900 mt-0.5 block">{data.detail.destination || "-"}</span>
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="space-y-4 pt-2">
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
-                        <Clock className="w-3.5 h-3.5 text-zinc-600" />
-                        <span>Riwayat Perjalanan</span>
-                      </h4>
-
-                      {Array.isArray(data.history) && data.history.length > 0 ? (
-                        <div className="relative pl-6 space-y-5 before:absolute before:left-[10px] before:top-2 before:bottom-2 before:w-[2px] before:bg-zinc-200">
-                          {data.history.map((h, idx) => (
-                            <div key={idx} className="relative">
-                              <div
-                                className={`absolute -left-[23px] top-1 w-5 h-5 rounded-full flex items-center justify-center border-2 ${
-                                  idx === 0 ? "bg-zinc-900 border-zinc-900 text-white" : "bg-white border-zinc-300"
-                                }`}
-                              >
-                                <div className={`w-1.5 h-1.5 rounded-full ${idx === 0 ? "bg-white" : "bg-zinc-300"}`} />
-                              </div>
-                              <p className={`text-sm ${idx === 0 ? "font-bold text-zinc-950" : "font-medium text-zinc-700"}`}>
-                                {h.note}
-                              </p>
-                              <span className="text-xs text-zinc-400 font-mono block mt-0.5">
-                                {h.date} {h.city_name ? `• ${h.city_name}` : ""}
-                              </span>
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                      {/* Left: Origin/Destination info */}
+                      <div className="lg:col-span-4 space-y-4">
+                        {(data.detail?.origin || data.detail?.destination) && (
+                          <div className="p-5 bg-zinc-50 rounded-2xl border border-zinc-100 space-y-4 text-sm">
+                            <div>
+                              <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wider block">Asal</span>
+                              <span className="text-base font-bold text-zinc-900 mt-0.5 block">{data.detail.origin || "-"}</span>
+                              {data.detail.shipper && <span className="text-xs text-zinc-500 block mt-1">Pengirim: {data.detail.shipper}</span>}
                             </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-xs text-zinc-400 italic">Belum ada pembaruan linimasa.</p>
-                      )}
+                            <div className="pt-3 border-t border-zinc-200/60">
+                              <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wider block">Tujuan</span>
+                              <span className="text-base font-bold text-zinc-900 mt-0.5 block">{data.detail.destination || "-"}</span>
+                              {data.detail.receiver && <span className="text-xs text-zinc-500 block mt-1">Penerima: {data.detail.receiver}</span>}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Right: Chronological Timeline */}
+                      <div className="lg:col-span-8 space-y-4">
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
+                          <Clock className="w-3.5 h-3.5 text-zinc-600" />
+                          <span>Linimasa Pengiriman</span>
+                        </h4>
+
+                        {Array.isArray(data.history) && data.history.length > 0 ? (
+                          <div className="relative pl-6 space-y-5 before:absolute before:left-[10px] before:top-2 before:bottom-2 before:w-[2px] before:bg-zinc-200">
+                            {data.history.map((h, idx) => (
+                              <div key={idx} className="relative">
+                                <div
+                                  className={`absolute -left-[23px] top-1 w-5 h-5 rounded-full flex items-center justify-center border-2 ${
+                                    idx === 0 ? "bg-zinc-900 border-zinc-900 text-white" : "bg-white border-zinc-300"
+                                  }`}
+                                >
+                                  <div className={`w-1.5 h-1.5 rounded-full ${idx === 0 ? "bg-white" : "bg-zinc-300"}`} />
+                                </div>
+                                <p className={`text-sm sm:text-base ${idx === 0 ? "font-bold text-zinc-950" : "font-medium text-zinc-700"}`}>
+                                  {h.note}
+                                </p>
+                                <span className="text-xs text-zinc-400 font-mono block mt-0.5">
+                                  {h.date} {h.city_name ? `• ${h.city_name}` : ""}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-xs text-zinc-400 italic">Belum ada pembaruan linimasa.</p>
+                        )}
+                      </div>
                     </div>
                   </div>
                 );
@@ -755,13 +761,13 @@ export default function Home() {
               // Chat Response (Sarah CS)
               if (item.type === "chat_response" && item.replyText) {
                 return (
-                  <div key={item.id} className="flex gap-3 max-w-2xl animate-in fade-in">
-                    <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 border border-zinc-200 mt-1 shadow-2xs">
+                  <div key={item.id} className="flex gap-3 max-w-3xl animate-in fade-in">
+                    <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 border border-zinc-200 mt-1 shadow-2xs">
                       <img src={AGENT_AVATAR} alt="Sarah" className="w-full h-full object-cover" />
                     </div>
-                    <div className="bg-white border border-zinc-200 rounded-3xl rounded-tl-sm p-5 sm:p-6 text-sm sm:text-base leading-relaxed text-zinc-900 shadow-sm whitespace-pre-wrap">
-                      <div className="flex items-center gap-2 pb-2 mb-2 border-b border-zinc-100 text-xs font-semibold text-zinc-500">
-                        <span>Sarah — CS Logistik Obrool</span>
+                    <div className="bg-white border border-zinc-200 rounded-3xl rounded-tl-sm p-6 sm:p-7 text-base leading-relaxed text-zinc-900 shadow-sm whitespace-pre-wrap">
+                      <div className="flex items-center gap-2 pb-2.5 mb-3 border-b border-zinc-100 text-xs font-bold text-zinc-600">
+                        <span>Sarah — Layanan Ekspedisi Obrool</span>
                       </div>
                       {item.replyText}
                     </div>
