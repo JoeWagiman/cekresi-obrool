@@ -4,7 +4,7 @@ import { Package } from "lucide-react";
 export function Header() {
   return (
     <header className="border-b border-zinc-200 bg-white">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-lg bg-zinc-900 flex items-center justify-center text-white">
             <Package className="w-4 h-4" />

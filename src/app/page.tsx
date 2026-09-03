@@ -9,85 +9,107 @@ import { AiChatSection } from "@/components/AiChatSection";
 import { Search, Calculator, MessageSquare } from "lucide-react";
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<"track" | "cost" | "chat">("track");
+  const [activeTool, setActiveTool] = useState<"track" | "cost">("track");
+  const [mobileTab, setMobileTab] = useState<"tools" | "chat">("tools");
 
   return (
     <div className="min-h-screen flex flex-col bg-zinc-50/50">
       <Header />
 
-      <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 pt-10 pb-16">
-        {/* Title */}
-        <div className="mb-8 text-center sm:text-left space-y-1.5">
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-900">
-            Cek Resi & Ongkos Kirim
-          </h1>
-          <p className="text-sm text-zinc-500">
-            Lacak kiriman paket atau periksa perkiraan tarif kurir domestik secara langsung.
-          </p>
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-10">
+        {/* Title Bar */}
+        <div className="mb-6 flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 border-b border-zinc-200 pb-4">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900">
+              Cek Resi & Ongkos Kirim
+            </h1>
+            <p className="text-xs text-zinc-500 mt-0.5">
+              Pelacakan nomor resi pengiriman dan simulasi tarif kurir domestik.
+            </p>
+          </div>
+
+          {/* Mobile view switcher */}
+          <div className="flex lg:hidden bg-zinc-200/70 p-0.5 rounded-lg text-xs font-medium self-start sm:self-auto">
+            <button
+              type="button"
+              onClick={() => setMobileTab("tools")}
+              className={`px-3 py-1.5 rounded-md transition-all ${
+                mobileTab === "tools" ? "bg-white text-zinc-900 shadow-sm" : "text-zinc-600 hover:text-zinc-900"
+              }`}
+            >
+              Alat Ekspedisi
+            </button>
+            <button
+              type="button"
+              onClick={() => setMobileTab("chat")}
+              className={`px-3 py-1.5 rounded-md transition-all ${
+                mobileTab === "chat" ? "bg-white text-zinc-900 shadow-sm" : "text-zinc-600 hover:text-zinc-900"
+              }`}
+            >
+              Asisten Chat
+            </button>
+          </div>
         </div>
 
-        {/* Tab Buttons */}
-        <div className="flex border-b border-zinc-200 mb-6 gap-1 sm:gap-2">
-          <button
-            type="button"
-            onClick={() => setActiveTab("track")}
-            className={`flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-medium border-b-2 transition-colors -mb-[1px] ${
-              activeTab === "track"
-                ? "border-zinc-900 text-zinc-900"
-                : "border-transparent text-zinc-500 hover:text-zinc-800"
-            }`}
+        {/* 2-Column Wide-Screen Workbench */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+          {/* Left Column (Primary Tool Panel) */}
+          <div
+            className={`space-y-4 ${
+              mobileTab === "tools" ? "block" : "hidden lg:block"
+            } lg:col-span-7 xl:col-span-7`}
           >
-            <Search className="w-4 h-4" />
-            <span>Lacak Resi</span>
-          </button>
+            {/* Tool Segmented Switcher */}
+            <div className="inline-flex bg-zinc-200/60 p-1 rounded-xl gap-1">
+              <button
+                type="button"
+                onClick={() => setActiveTool("track")}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
+                  activeTool === "track"
+                    ? "bg-white text-zinc-900 shadow-sm"
+                    : "text-zinc-600 hover:text-zinc-900"
+                }`}
+              >
+                <Search className="w-3.5 h-3.5" />
+                <span>Lacak Resi</span>
+              </button>
 
-          <button
-            type="button"
-            onClick={() => setActiveTab("cost")}
-            className={`flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-medium border-b-2 transition-colors -mb-[1px] ${
-              activeTab === "cost"
-                ? "border-zinc-900 text-zinc-900"
-                : "border-transparent text-zinc-500 hover:text-zinc-800"
-            }`}
+              <button
+                type="button"
+                onClick={() => setActiveTool("cost")}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
+                  activeTool === "cost"
+                    ? "bg-white text-zinc-900 shadow-sm"
+                    : "text-zinc-600 hover:text-zinc-900"
+                }`}
+              >
+                <Calculator className="w-3.5 h-3.5" />
+                <span>Cek Tarif Ongkir</span>
+              </button>
+            </div>
+
+            {/* Active Tool View */}
+            <div className="transition-all duration-100">
+              {activeTool === "track" ? <TrackingSection /> : <ShippingRateSection />}
+            </div>
+          </div>
+
+          {/* Right Column (Side-by-Side Assistant on Wide Screens) */}
+          <div
+            className={`space-y-3 ${
+              mobileTab === "chat" ? "block" : "hidden lg:block"
+            } lg:col-span-5 xl:col-span-5`}
           >
-            <Calculator className="w-4 h-4" />
-            <span>Cek Tarif</span>
-          </button>
+            <div className="flex items-center justify-between px-1">
+              <div className="flex items-center gap-2 text-xs font-semibold text-zinc-800">
+                <MessageSquare className="w-3.5 h-3.5 text-zinc-500" />
+                <span>Asisten Langsung</span>
+              </div>
+              <span className="text-[0.6875rem] text-zinc-400">Siap membantu cek rute & resi</span>
+            </div>
 
-          <button
-            type="button"
-            onClick={() => setActiveTab("chat")}
-            className={`flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-medium border-b-2 transition-colors -mb-[1px] ${
-              activeTab === "chat"
-                ? "border-zinc-900 text-zinc-900"
-                : "border-transparent text-zinc-500 hover:text-zinc-800"
-            }`}
-          >
-            <MessageSquare className="w-4 h-4" />
-            <span>Tanya Asisten AI</span>
-          </button>
-        </div>
-
-        {/* Tab Content */}
-        <div>
-          {activeTab === "track" && <TrackingSection />}
-          {activeTab === "cost" && <ShippingRateSection />}
-          {activeTab === "chat" && <AiChatSection />}
-        </div>
-
-        {/* Subtle note */}
-        <div className="mt-14 p-4 rounded-xl border border-zinc-200 bg-white text-xs text-zinc-500 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-          <span>
-            Data pelacakan dan tarif diperoleh melalui integrasi API kurir Binderbyte.
-          </span>
-          <a
-            href="https://obrool.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-zinc-900 font-medium hover:underline whitespace-nowrap"
-          >
-            Pasang bot ini di toko Anda &rarr;
-          </a>
+            <AiChatSection />
+          </div>
         </div>
       </main>
 
