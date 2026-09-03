@@ -75,16 +75,19 @@ export function extractLogisticsIntent(message: string, previousAgentMessage?: s
     lower.includes("sampai mana") ||
     lower.includes("status paket");
 
-  // Format umum resi ekspedisi Indonesia: Alfanumerik 8–24 karakter
-  // Contoh: JP1234567890, SPXID0123456789, 012345678901, SOCAG012345678, JT1234567890
+  // Format umum resi ekspedisi Indonesia: Alfanumerik 8–24 karakter dan WAJIB mengandung minimal 4 digit angka.
+  // Contoh: JP1234567890, SPXID0123456789, 012345678901, 582230008329223.
+  // Kata bahasa umum (seperti "INDONESIA", "NUSANTARA", "PENGIRIMAN") TIDAK BOLEH dianggap nomor resi.
   const awbRegex = /\b([A-Z0-9]{8,24})\b/i;
   const matches = text.match(awbRegex);
 
   if (isTrackingQuery && matches) {
-    // Hindari kata kunci biasa terdeteksi sebagai nomor resi
     const candidate = matches[1].toUpperCase();
-    const blacklistWords = ["TRACKING", "PENGIRIMAN", "EXPEDISI", "EKSPEDISI", "KIRIMAN", "SICEPAT", "ANTERAJA"];
-    if (!blacklistWords.includes(candidate) && candidate.length >= 8) {
+    const digitCount = (candidate.match(/\d/g) || []).length;
+    const blacklistWords = ["TRACKING", "PENGIRIMAN", "EXPEDISI", "EKSPEDISI", "KIRIMAN", "SICEPAT", "ANTERAJA", "INDONESIA", "NUSANTARA"];
+
+    // Wajib mengandung minimal 4 digit angka agar kata bahasa umum tidak salah dianggap nomor resi
+    if (digitCount >= 4 && !blacklistWords.includes(candidate)) {
       return {
         type: "tracking",
         courier: detectedCourier !== "all" ? detectedCourier : "jne",
