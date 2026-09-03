@@ -1,18 +1,20 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Send, Bot, User, Sparkles, Loader2, RotateCcw } from "lucide-react";
+import { Send, User, Sparkles, Loader2, RotateCcw } from "lucide-react";
 
 interface ChatMessage {
   role: "user" | "agent";
   text: string;
 }
 
+const AGENT_AVATAR = "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=120&auto=format&fit=crop&q=80";
+
 export function AiChatSection() {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: "agent",
-      text: "Halo! Silakan tanyakan estimasi ongkos kirim, nomor resi kiriman, atau lokasi drop point kurir terdekat.",
+      text: "Halo, saya Sarah dari layanan ekspedisi Obrool. Silakan tanyakan tarif ongkir, nomor resi pengiriman, atau alamat drop point kurir terdekat.",
     },
   ]);
   const [input, setInput] = useState("");
@@ -21,10 +23,10 @@ export function AiChatSection() {
   const sessionIdRef = useRef<string>("sess_" + Date.now());
 
   const sampleQuestions = [
-    "Cek ongkir Sokaraja ke Surakarta 3 kg",
+    "Ongkir Sokaraja ke Solo 3 kg",
     "Lacak resi JNE 582230008329223",
-    "Kantor cabang J&T terdekat di Purwokerto",
-    "Apakah ada layanan kargo untuk barang 50 kg?",
+    "Kantor J&T terdekat di Purwokerto",
+    "Tarif kargo barang 50 kg ke Surabaya",
   ];
 
   useEffect(() => {
@@ -53,7 +55,7 @@ export function AiChatSection() {
 
       let botReply = "";
 
-      // 1. Coba koneksi langsung ke Obrool API (CORS '*') untuk performa instan tanpa limit timeout serverless
+      // 1. Coba koneksi langsung ke Obrool API
       try {
         const directRes = await fetch(`${obroolUrl}/api/adp/chat`, {
           method: "POST",
@@ -74,10 +76,10 @@ export function AiChatSection() {
           }
         }
       } catch {
-        // Fallback jika diblokir oleh ekstensi browser/adblocker
+        // Fallback jika direct diblokir
       }
 
-      // 2. Fallback melalui endpoint proxy lokal (/api/chat)
+      // 2. Fallback via route proxy
       if (!botReply) {
         const res = await fetch("/api/chat", {
           method: "POST",
@@ -97,7 +99,7 @@ export function AiChatSection() {
     } catch {
       setMessages((prev) => [
         ...prev,
-        { role: "agent", text: "Maaf, koneksi ke asisten AI terputus. Silakan coba kembali." },
+        { role: "agent", text: "Koneksi terputus. Silakan coba kirim ulang." },
       ]);
     } finally {
       setLoading(false);
@@ -109,61 +111,71 @@ export function AiChatSection() {
     setMessages([
       {
         role: "agent",
-        text: "Percakapan baru dimulai! Ada yang ingin Anda tanyakan seputar cek ongkir, resi, atau kurir?",
+        text: "Sesi percakapan baru dimulai. Ada yang ingin Anda tanyakan seputar pengiriman paket?",
       },
     ]);
   };
 
   return (
-    <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm overflow-hidden flex flex-col h-[560px]">
-      {/* Header Chat */}
-      <div className="px-5 py-3.5 border-b border-zinc-100 bg-white flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-zinc-900 flex items-center justify-center text-white">
-            <Bot className="w-4 h-4" />
+    <div className="bg-white border border-zinc-200/90 rounded-2xl shadow-sm overflow-hidden flex flex-col h-[640px]">
+      {/* Header CS Persona */}
+      <div className="px-5 py-4 border-b border-zinc-200/80 bg-zinc-50/50 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="relative w-10 h-10 rounded-full overflow-hidden flex-shrink-0 border-2 border-white shadow-sm ring-1 ring-zinc-200">
+            <img
+              src={AGENT_AVATAR}
+              alt="Sarah — CS Logistik"
+              className="w-full h-full object-cover"
+            />
+            <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white" />
           </div>
           <div>
-            <h3 className="text-xs font-semibold text-zinc-900">
-              Asisten Ekspedisi
-            </h3>
-            <span className="text-[0.6875rem] text-zinc-400">Tanya ongkir atau lacak resi</span>
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-bold text-zinc-900">Sarah</h3>
+              <span className="text-[0.625rem] px-2 py-0.5 bg-zinc-100 text-zinc-600 font-semibold rounded-full border border-zinc-200">
+                CS Ekspedisi
+              </span>
+            </div>
+            <p className="text-xs text-zinc-500">Siap membantu cek tarif & status paket</p>
           </div>
         </div>
 
         <button
           type="button"
           onClick={handleReset}
-          className="text-xs text-zinc-500 hover:text-zinc-800 flex items-center gap-1 px-2.5 py-1.5 rounded-lg hover:bg-zinc-200/50 transition-colors"
+          className="text-xs text-zinc-500 hover:text-zinc-900 flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-zinc-200/60 transition-colors font-medium"
           title="Mulai percakapan baru"
         >
           <RotateCcw className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline text-[0.6875rem]">Reset Sesi</span>
+          <span>Reset</span>
         </button>
       </div>
 
       {/* Message List */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto p-5 space-y-4">
         {messages.map((m, idx) => {
           const isAgent = m.role === "agent";
           return (
             <div
               key={idx}
-              className={`flex gap-3 max-w-[88%] sm:max-w-[80%] ${
+              className={`flex gap-3 max-w-[90%] sm:max-w-[85%] ${
                 isAgent ? "mr-auto" : "ml-auto flex-row-reverse"
               }`}
             >
-              <div
-                className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-xs font-semibold ${
-                  isAgent ? "bg-zinc-900 text-white" : "bg-zinc-700 text-white"
-                }`}
-              >
-                {isAgent ? <Bot className="w-4 h-4" /> : <User className="w-4 h-4" />}
-              </div>
+              {isAgent ? (
+                <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 border border-zinc-200 mt-0.5">
+                  <img src={AGENT_AVATAR} alt="Sarah" className="w-full h-full object-cover" />
+                </div>
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-zinc-800 text-white flex items-center justify-center flex-shrink-0 text-xs font-bold mt-0.5">
+                  <User className="w-4 h-4" />
+                </div>
+              )}
 
               <div
-                className={`rounded-2xl px-4 py-2.5 text-xs sm:text-sm leading-relaxed whitespace-pre-wrap ${
+                className={`rounded-2xl px-4 py-3 text-sm sm:text-base leading-relaxed whitespace-pre-wrap ${
                   isAgent
-                    ? "bg-zinc-100 text-zinc-800 rounded-tl-sm border border-zinc-200/70"
+                    ? "bg-zinc-100/80 text-zinc-900 rounded-tl-sm border border-zinc-200/70"
                     : "bg-zinc-900 text-white rounded-tr-sm shadow-sm"
                 }`}
               >
@@ -174,28 +186,27 @@ export function AiChatSection() {
         })}
 
         {loading && (
-          <div className="flex gap-3 max-w-[80%] mr-auto items-center">
-            <div className="w-7 h-7 rounded-lg bg-zinc-900 text-white flex items-center justify-center flex-shrink-0">
-              <Bot className="w-4 h-4" />
+          <div className="flex gap-3 max-w-[85%] mr-auto items-center">
+            <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 border border-zinc-200">
+              <img src={AGENT_AVATAR} alt="Sarah" className="w-full h-full object-cover" />
             </div>
-            <div className="bg-zinc-100 border border-zinc-200/70 rounded-2xl rounded-tl-sm px-4 py-2.5 flex items-center gap-2 text-xs text-zinc-500">
-              <Loader2 className="w-3.5 h-3.5 animate-spin text-zinc-900" />
-              <span>Memeriksa database ekspedisi...</span>
+            <div className="bg-zinc-100 border border-zinc-200/70 rounded-2xl rounded-tl-sm px-4 py-3 flex items-center gap-2.5 text-sm text-zinc-600">
+              <Loader2 className="w-4 h-4 animate-spin text-zinc-900" />
+              <span>Sarah sedang mengecek data ekspedisi...</span>
             </div>
           </div>
         )}
       </div>
 
       {/* Suggested Quick Questions */}
-      <div className="px-4 py-2 bg-zinc-50/60 border-t border-zinc-100 flex items-center gap-1.5 overflow-x-auto text-[0.6875rem] no-scrollbar">
+      <div className="px-4 py-2.5 bg-zinc-50 border-t border-zinc-200/70 flex items-center gap-2 overflow-x-auto text-xs no-scrollbar">
         <Sparkles className="w-3.5 h-3.5 text-zinc-400 flex-shrink-0 ml-1" />
-        <span className="text-zinc-400 font-medium whitespace-nowrap">Contoh pertanyaan:</span>
         {sampleQuestions.map((q, i) => (
           <button
             key={i}
             type="button"
             onClick={() => handleSend(q)}
-            className="px-2.5 py-1 bg-white hover:bg-zinc-100 border border-zinc-200 text-zinc-600 hover:text-zinc-900 rounded-full whitespace-nowrap transition-colors"
+            className="px-3 py-1.5 bg-white hover:bg-zinc-100 border border-zinc-200 text-zinc-700 hover:text-zinc-900 rounded-full whitespace-nowrap transition-colors text-xs font-medium shadow-2xs"
           >
             {q}
           </button>
@@ -208,19 +219,19 @@ export function AiChatSection() {
           e.preventDefault();
           handleSend();
         }}
-        className="p-3 bg-white border-t border-zinc-200 flex gap-2"
+        className="p-3.5 bg-white border-t border-zinc-200 flex gap-2.5"
       >
         <input
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Ketik rute atau pertanyaan (misal: ongkir Sokaraja ke Solo 3kg)..."
-          className="flex-1 px-4 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-xs sm:text-sm text-zinc-900 outline-none focus:bg-white focus:border-zinc-900 transition-all placeholder:text-zinc-400"
+          placeholder="Tanyakan ke Sarah (misal: ongkir Sokaraja ke Solo 3kg)..."
+          className="flex-1 px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl text-sm sm:text-base text-zinc-900 outline-none focus:bg-white focus:border-zinc-900 transition-all placeholder:text-zinc-400"
         />
         <button
           type="submit"
           disabled={loading || !input.trim()}
-          className="px-4 py-2.5 bg-zinc-900 hover:bg-zinc-800 text-white rounded-xl text-sm font-medium transition-all disabled:opacity-50 flex items-center justify-center"
+          className="px-5 py-3 bg-zinc-900 hover:bg-zinc-800 text-white rounded-xl text-sm font-semibold transition-all disabled:opacity-40 flex items-center justify-center shadow-sm"
         >
           <Send className="w-4 h-4" />
         </button>

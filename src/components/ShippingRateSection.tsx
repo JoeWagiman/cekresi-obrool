@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Search, Loader2, ArrowRightLeft, DollarSign, Clock, AlertCircle } from "lucide-react";
+import { Search, Loader2, ArrowRightLeft, AlertCircle, ArrowUpRight } from "lucide-react";
 
-interface CostItem {
+interface ShippingOption {
   courier: string;
   service: string;
   description: string;
@@ -12,12 +12,19 @@ interface CostItem {
 }
 
 export function ShippingRateSection() {
-  const [origin, setOrigin] = useState("");
-  const [destination, setDestination] = useState("");
+  const [origin, setOrigin] = useState("Sokaraja");
+  const [destination, setDestination] = useState("Surakarta");
   const [weight, setWeight] = useState("1");
+  const [courier, setCourier] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [rates, setRates] = useState<CostItem[]>([]);
+  const [rates, setRates] = useState<ShippingOption[]>([]);
+
+  const handleSwap = () => {
+    const temp = origin;
+    setOrigin(destination);
+    setDestination(temp);
+  };
 
   const handleCalculate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,22 +35,30 @@ export function ShippingRateSection() {
     setRates([]);
 
     try {
-      const res = await fetch("/api/cost", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          origin: origin.trim(),
-          destination: destination.trim(),
-          weight: parseFloat(weight) || 1,
-        }),
+      const weightNum = parseFloat(weight) || 1;
+      const weightGrams = Math.round(weightNum * 1000);
+
+      const params = new URLSearchParams({
+        origin: origin.trim(),
+        destination: destination.trim(),
+        weight: String(weightGrams),
       });
 
-      const data = await res.json();
-      if (!res.ok || data.error) {
-        throw new Error(data.error || "Gagal mendapatkan estimasi tarif ongkos kirim.");
+      if (courier) {
+        params.append("courier", courier);
       }
 
-      setRates(data.data?.costs || []);
+      const res = await fetch(`/api/cost?${params.toString()}`);
+      const data = await res.json();
+
+      if (!res.ok || data.error) {
+        throw new Error(data.error || "Gagal mendapatkan informasi tarif pengiriman.");
+      }
+
+      const rawRates: ShippingOption[] = Array.isArray(data.rates) ? data.rates : [];
+      rawRates.sort((a, b) => (a.cost || 0) - (b.cost || 0));
+
+      setRates(rawRates);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Terjadi kesalahan saat memeriksa tarif.");
     } finally {
@@ -51,172 +66,167 @@ export function ShippingRateSection() {
     }
   };
 
-  const handleSwap = () => {
-    const temp = origin;
-    setOrigin(destination);
-    setDestination(temp);
-  };
-
   return (
     <div className="space-y-6">
-      {/* Form Input */}
-      <form onSubmit={handleCalculate} className="bg-white border border-zinc-200 rounded-2xl p-4 sm:p-6 shadow-sm space-y-4">
+      {/* Search Form with Large Inputs */}
+      <form onSubmit={handleCalculate} className="bg-white border border-zinc-200/90 rounded-2xl p-5 sm:p-7 shadow-sm space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
-          {/* Asal */}
+          {/* Origin */}
           <div className="sm:col-span-5">
-            <label className="block text-xs font-semibold text-zinc-700 mb-1.5">Kota / Kecamatan Asal</label>
+            <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">
+              Kecamatan / Kota Asal
+            </label>
             <input
               type="text"
               value={origin}
               onChange={(e) => setOrigin(e.target.value)}
-              placeholder="Contoh: Sokaraja, Banyumas"
-              className="w-full px-3.5 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-sm text-zinc-900 placeholder:text-zinc-400 outline-none focus:bg-white focus:border-blue-600 transition-all"
+              placeholder="Misal: Sokaraja / Banyumas"
+              className="w-full px-4 py-3.5 bg-zinc-50 border border-zinc-200 rounded-xl text-base sm:text-lg font-medium text-zinc-900 outline-none focus:bg-white focus:border-zinc-900 transition-all placeholder:text-zinc-400"
             />
           </div>
 
-          {/* Swap button */}
-          <div className="sm:col-span-1 flex justify-center pb-1">
+          {/* Swap Button */}
+          <div className="sm:col-span-2 flex justify-center pb-1">
             <button
               type="button"
               onClick={handleSwap}
-              title="Tukar Asal & Tujuan"
-              className="p-2.5 rounded-xl border border-zinc-200 hover:bg-zinc-100 text-zinc-600 transition-colors"
+              className="p-3 rounded-xl border border-zinc-200 bg-zinc-50 hover:bg-zinc-200/70 text-zinc-700 transition-colors shadow-2xs"
+              title="Tukar rute"
             >
               <ArrowRightLeft className="w-4 h-4" />
             </button>
           </div>
 
-          {/* Tujuan */}
-          <div className="sm:col-span-4">
-            <label className="block text-xs font-semibold text-zinc-700 mb-1.5">Kota / Kecamatan Tujuan</label>
+          {/* Destination */}
+          <div className="sm:col-span-5">
+            <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">
+              Kecamatan / Kota Tujuan
+            </label>
             <input
               type="text"
               value={destination}
               onChange={(e) => setDestination(e.target.value)}
-              placeholder="Contoh: Surakarta, Solo"
-              className="w-full px-3.5 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-sm text-zinc-900 placeholder:text-zinc-400 outline-none focus:bg-white focus:border-blue-600 transition-all"
-            />
-          </div>
-
-          {/* Berat (kg) */}
-          <div className="sm:col-span-2">
-            <label className="block text-xs font-semibold text-zinc-700 mb-1.5">Berat (Kg)</label>
-            <input
-              type="number"
-              min="0.1"
-              step="0.5"
-              value={weight}
-              onChange={(e) => setWeight(e.target.value)}
-              className="w-full px-3.5 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-sm text-zinc-900 outline-none focus:bg-white focus:border-blue-600 transition-all font-mono"
+              placeholder="Misal: Surakarta / Solo"
+              className="w-full px-4 py-3.5 bg-zinc-50 border border-zinc-200 rounded-xl text-base sm:text-lg font-medium text-zinc-900 outline-none focus:bg-white focus:border-zinc-900 transition-all placeholder:text-zinc-400"
             />
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-2">
-          {/* Quick Route Shortcuts */}
-          <div className="flex flex-wrap items-center gap-1.5 text-[0.6875rem] text-zinc-500">
-            <span>Rute populer:</span>
-            <button
-              type="button"
-              onClick={() => {
-                setOrigin("Purwokerto");
-                setDestination("Jakarta");
-                setWeight("1");
-              }}
-              className="px-2 py-0.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-md transition-colors"
-            >
-              Purwokerto &rarr; Jakarta
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setOrigin("Surabaya");
-                setDestination("Medan");
-                setWeight("2");
-              }}
-              className="px-2 py-0.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-md transition-colors"
-            >
-              Surabaya &rarr; Medan
-            </button>
+        {/* Row 2: Weight & Submit */}
+        <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end pt-1">
+          <div className="sm:col-span-4">
+            <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">
+              Berat Paket (Kg)
+            </label>
+            <input
+              type="number"
+              min="0.1"
+              step="0.1"
+              value={weight}
+              onChange={(e) => setWeight(e.target.value)}
+              className="w-full px-4 py-3.5 bg-zinc-50 border border-zinc-200 rounded-xl text-base sm:text-lg font-mono font-semibold text-zinc-900 outline-none focus:bg-white focus:border-zinc-900 transition-all"
+            />
           </div>
 
-          {/* Submit Button */}
+          <div className="sm:col-span-8">
+            <button
+              type="submit"
+              disabled={loading || !origin.trim() || !destination.trim()}
+              className="w-full py-3.5 px-6 bg-zinc-900 hover:bg-black text-white font-semibold rounded-xl text-sm sm:text-base transition-all disabled:opacity-40 flex items-center justify-center gap-2 shadow-sm"
+            >
+              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Search className="w-5 h-5" />}
+              <span>Periksa Tarif Pengiriman</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Quick routes */}
+        <div className="flex flex-wrap items-center gap-2 pt-1 text-xs text-zinc-500">
+          <span className="text-zinc-400">Rute cepat:</span>
           <button
-            type="submit"
-            disabled={loading || !origin.trim() || !destination.trim()}
-            className="w-full sm:w-auto px-6 py-2.5 bg-zinc-900 hover:bg-zinc-800 text-white font-medium rounded-xl text-sm transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+            type="button"
+            onClick={() => {
+              setOrigin("Sokaraja");
+              setDestination("Surakarta");
+              setWeight("3");
+            }}
+            className="px-2.5 py-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-lg transition-colors font-medium"
           >
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
-            <span>Cek Tarif</span>
+            Sokaraja &rarr; Surakarta (3 kg)
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setOrigin("Jakarta");
+              setDestination("Surabaya");
+              setWeight("1");
+            }}
+            className="px-2.5 py-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-lg transition-colors font-medium"
+          >
+            Jakarta &rarr; Surabaya (1 kg)
           </button>
         </div>
       </form>
 
       {/* Error State */}
       {error && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3 animate-in fade-in">
-          <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-          <div className="text-xs text-amber-900 leading-relaxed">
-            <span className="font-semibold block mb-0.5">Pemberitahuan Pengecekan Tarif</span>
+        <div className="bg-red-50/70 border border-red-200 rounded-2xl p-5 flex items-start gap-3.5 animate-in fade-in">
+          <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+          <div className="text-sm text-red-800 leading-relaxed">
+            <span className="font-bold block mb-0.5 text-base">Gagal Mendapatkan Tarif</span>
             {error}
           </div>
         </div>
       )}
 
-      {/* Rates Table */}
+      {/* Rates Table / Cards with Bold Big Typography */}
       {rates.length > 0 && (
-        <div className="bg-white border border-zinc-200 rounded-2xl p-5 sm:p-7 shadow-sm space-y-4 animate-in fade-in">
-          <div className="flex items-center justify-between pb-3 border-b border-zinc-100">
+        <div className="bg-white border border-zinc-200/90 rounded-2xl p-6 sm:p-8 shadow-sm space-y-5 animate-in fade-in">
+          <div className="flex items-center justify-between border-b border-zinc-200 pb-4">
             <div>
-              <h3 className="text-sm font-bold text-zinc-900">
-                Pilihan Tarif Pengiriman ({origin} &rarr; {destination}, {weight} kg)
+              <span className="text-xs uppercase tracking-widest font-bold text-zinc-400">Hasil Simulasi</span>
+              <h3 className="text-xl sm:text-2xl font-black text-zinc-900 mt-0.5">
+                {origin} &rarr; {destination}
               </h3>
-              <p className="text-xs text-zinc-400">Diurutkan dari tarif paling hemat ke ekspres</p>
             </div>
-            <span className="text-xs font-semibold px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg">
-              {rates.length} Opsi Layanan
+            <span className="text-xs font-semibold px-3 py-1 bg-zinc-100 text-zinc-800 rounded-full font-mono">
+              {weight} Kg
             </span>
           </div>
 
-          <div className="divide-y divide-zinc-100">
-            {rates.map((item, idx) => {
-              const isCheapest = idx === 0;
-              return (
-                <div
-                  key={idx}
-                  className={`py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-3 rounded-xl transition-colors ${
-                    isCheapest ? "bg-blue-50/40 border border-blue-100" : "hover:bg-zinc-50"
-                  }`}
-                >
-                  <div className="space-y-0.5">
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-xs uppercase px-2 py-0.5 bg-zinc-900 text-white rounded">
-                        {item.courier}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            {rates.map((r, i) => (
+              <div
+                key={i}
+                className="p-5 rounded-xl border border-zinc-200 hover:border-zinc-300 bg-zinc-50/50 hover:bg-white transition-all space-y-2.5 flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold uppercase tracking-wider text-zinc-500 font-mono">
+                      {r.courier}
+                    </span>
+                    {r.etd && (
+                      <span className="text-xs font-mono font-medium text-zinc-600 bg-white px-2 py-0.5 rounded border border-zinc-200">
+                        {r.etd} hari
                       </span>
-                      <span className="text-xs font-semibold text-zinc-900">{item.service}</span>
-                      {isCheapest && (
-                        <span className="text-[0.625rem] font-bold px-1.5 py-0.5 bg-emerald-600 text-white rounded-full">
-                          Paling Hemat
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-xs text-zinc-500">{item.description}</p>
-                  </div>
-
-                  <div className="flex sm:flex-col items-center sm:items-end justify-between gap-1 text-right">
-                    <div className="text-sm font-bold text-zinc-900 font-mono">
-                      Rp {item.cost.toLocaleString("id-ID")}
-                    </div>
-                    {item.etd && (
-                      <div className="flex items-center gap-1 text-[0.6875rem] text-zinc-400">
-                        <Clock className="w-3 h-3" />
-                        <span>{item.etd} hari kerja</span>
-                      </div>
                     )}
                   </div>
+                  <h4 className="text-base font-bold text-zinc-900 mt-1">
+                    {r.service}
+                  </h4>
+                  {r.description && (
+                    <p className="text-xs text-zinc-500 line-clamp-1">{r.description}</p>
+                  )}
                 </div>
-              );
-            })}
+
+                <div className="pt-2 border-t border-zinc-200/60 flex items-baseline justify-between">
+                  <span className="text-xs text-zinc-400 font-medium">Tarif</span>
+                  <span className="text-2xl font-black font-mono tracking-tight text-zinc-900">
+                    Rp {r.cost.toLocaleString("id-ID")}
+                  </span>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}
