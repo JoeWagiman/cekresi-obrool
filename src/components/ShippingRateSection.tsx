@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Search, Loader2, ArrowRightLeft, AlertCircle, ArrowUpRight } from "lucide-react";
+import { Search, Loader2, ArrowRightLeft } from "lucide-react";
 
 interface ShippingOption {
   courier: string;
@@ -14,7 +14,7 @@ interface ShippingOption {
 export function ShippingRateSection() {
   const [origin, setOrigin] = useState("Sokaraja");
   const [destination, setDestination] = useState("Surakarta");
-  const [weight, setWeight] = useState("1");
+  const [weight, setWeight] = useState("3");
   const [courier, setCourier] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -52,7 +52,7 @@ export function ShippingRateSection() {
       const data = await res.json();
 
       if (!res.ok || data.error) {
-        throw new Error(data.error || "Gagal mendapatkan informasi tarif pengiriman.");
+        throw new Error(data.error || "GAGAL MEMUAT DATA TARIF DARI GATEWAY.");
       }
 
       const rawRates: ShippingOption[] = Array.isArray(data.rates) ? data.rates : [];
@@ -60,63 +60,68 @@ export function ShippingRateSection() {
 
       setRates(rawRates);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Terjadi kesalahan saat memeriksa tarif.");
+      setError(err instanceof Error ? err.message : "TERJADI GANGGUAN PADA KALKULASI TARIF.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="space-y-6">
-      {/* Search Form with Large Inputs */}
-      <form onSubmit={handleCalculate} className="bg-white border border-zinc-200/90 rounded-2xl p-5 sm:p-7 shadow-sm space-y-4">
+    <div className="space-y-6 font-mono">
+      {/* Route & Weight Matrix Terminal */}
+      <form onSubmit={handleCalculate} className="border-2 border-black bg-white p-5 sm:p-7 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] space-y-4">
+        <div className="flex items-center justify-between border-b-2 border-black pb-3 text-xs">
+          <span className="font-black tracking-widest bg-black text-white px-2 py-0.5">
+            FREIGHT_RATE // SIMULATOR
+          </span>
+          <span className="text-zinc-500 font-bold hidden sm:inline">RUTE ASAL - TUJUAN & BERAT</span>
+        </div>
+
+        {/* Route Inputs */}
         <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
-          {/* Origin */}
           <div className="sm:col-span-5">
-            <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">
-              Kecamatan / Kota Asal
+            <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-2">
+              [01] KECAMATAN / KOTA ASAL:
             </label>
             <input
               type="text"
               value={origin}
               onChange={(e) => setOrigin(e.target.value)}
-              placeholder="Misal: Sokaraja / Banyumas"
-              className="w-full px-4 py-3.5 bg-zinc-50 border border-zinc-200 rounded-xl text-base sm:text-lg font-medium text-zinc-900 outline-none focus:bg-white focus:border-zinc-900 transition-all placeholder:text-zinc-400"
+              placeholder="MISAL: SOKARAJA"
+              className="w-full px-4 py-3 bg-zinc-50 border-2 border-black text-base sm:text-lg font-black tracking-wider text-black uppercase outline-none focus:bg-white"
             />
           </div>
 
-          {/* Swap Button */}
           <div className="sm:col-span-2 flex justify-center pb-1">
             <button
               type="button"
               onClick={handleSwap}
-              className="p-3 rounded-xl border border-zinc-200 bg-zinc-50 hover:bg-zinc-200/70 text-zinc-700 transition-colors shadow-2xs"
+              className="p-3 border-2 border-black bg-zinc-100 hover:bg-black hover:text-white transition-all active:translate-x-0.5 active:translate-y-0.5"
               title="Tukar rute"
             >
               <ArrowRightLeft className="w-4 h-4" />
             </button>
           </div>
 
-          {/* Destination */}
           <div className="sm:col-span-5">
-            <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">
-              Kecamatan / Kota Tujuan
+            <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-2">
+              [02] KECAMATAN / KOTA TUJUAN:
             </label>
             <input
               type="text"
               value={destination}
               onChange={(e) => setDestination(e.target.value)}
-              placeholder="Misal: Surakarta / Solo"
-              className="w-full px-4 py-3.5 bg-zinc-50 border border-zinc-200 rounded-xl text-base sm:text-lg font-medium text-zinc-900 outline-none focus:bg-white focus:border-zinc-900 transition-all placeholder:text-zinc-400"
+              placeholder="MISAL: SURAKARTA"
+              className="w-full px-4 py-3 bg-zinc-50 border-2 border-black text-base sm:text-lg font-black tracking-wider text-black uppercase outline-none focus:bg-white"
             />
           </div>
         </div>
 
-        {/* Row 2: Weight & Submit */}
+        {/* Weight & Action */}
         <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end pt-1">
           <div className="sm:col-span-4">
-            <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">
-              Berat Paket (Kg)
+            <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-2">
+              [03] BERAT (KG):
             </label>
             <input
               type="number"
@@ -124,7 +129,7 @@ export function ShippingRateSection() {
               step="0.1"
               value={weight}
               onChange={(e) => setWeight(e.target.value)}
-              className="w-full px-4 py-3.5 bg-zinc-50 border border-zinc-200 rounded-xl text-base sm:text-lg font-mono font-semibold text-zinc-900 outline-none focus:bg-white focus:border-zinc-900 transition-all"
+              className="w-full px-4 py-3 bg-zinc-50 border-2 border-black text-base sm:text-lg font-black text-black outline-none focus:bg-white"
             />
           </div>
 
@@ -132,17 +137,17 @@ export function ShippingRateSection() {
             <button
               type="submit"
               disabled={loading || !origin.trim() || !destination.trim()}
-              className="w-full py-3.5 px-6 bg-zinc-900 hover:bg-black text-white font-semibold rounded-xl text-sm sm:text-base transition-all disabled:opacity-40 flex items-center justify-center gap-2 shadow-sm"
+              className="w-full py-3.5 px-6 bg-black hover:bg-zinc-800 text-white font-black text-sm tracking-wider uppercase transition-all disabled:opacity-40 flex items-center justify-center gap-2 border-2 border-black active:translate-x-0.5 active:translate-y-0.5"
             >
-              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Search className="w-5 h-5" />}
-              <span>Periksa Tarif Pengiriman</span>
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+              <span>HITUNG TARIF ONGKIR</span>
             </button>
           </div>
         </div>
 
-        {/* Quick routes */}
-        <div className="flex flex-wrap items-center gap-2 pt-1 text-xs text-zinc-500">
-          <span className="text-zinc-400">Rute cepat:</span>
+        {/* Presets */}
+        <div className="flex items-center gap-2 pt-1 text-xs">
+          <span className="text-zinc-400 font-bold">PRESET:</span>
           <button
             type="button"
             onClick={() => {
@@ -150,9 +155,9 @@ export function ShippingRateSection() {
               setDestination("Surakarta");
               setWeight("3");
             }}
-            className="px-2.5 py-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-lg transition-colors font-medium"
+            className="underline hover:bg-black hover:text-white px-1 font-semibold"
           >
-            Sokaraja &rarr; Surakarta (3 kg)
+            Sokaraja &rarr; Surakarta (3kg)
           </button>
           <button
             type="button"
@@ -161,72 +166,78 @@ export function ShippingRateSection() {
               setDestination("Surabaya");
               setWeight("1");
             }}
-            className="px-2.5 py-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-lg transition-colors font-medium"
+            className="underline hover:bg-black hover:text-white px-1 font-semibold"
           >
-            Jakarta &rarr; Surabaya (1 kg)
+            Jakarta &rarr; Surabaya (1kg)
           </button>
         </div>
       </form>
 
-      {/* Error State */}
+      {/* Error Stamp */}
       {error && (
-        <div className="bg-red-50/70 border border-red-200 rounded-2xl p-5 flex items-start gap-3.5 animate-in fade-in">
-          <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-          <div className="text-sm text-red-800 leading-relaxed">
-            <span className="font-bold block mb-0.5 text-base">Gagal Mendapatkan Tarif</span>
-            {error}
-          </div>
+        <div className="border-2 border-black bg-red-50 p-5 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] space-y-1">
+          <div className="font-black text-xs text-red-600 tracking-widest">[ERR: CALCULATION_FAILED]</div>
+          <p className="text-sm font-bold text-black uppercase">{error}</p>
         </div>
       )}
 
-      {/* Rates Table / Cards with Bold Big Typography */}
+      {/* Thermal Freight Quotation Board */}
       {rates.length > 0 && (
-        <div className="bg-white border border-zinc-200/90 rounded-2xl p-6 sm:p-8 shadow-sm space-y-5 animate-in fade-in">
-          <div className="flex items-center justify-between border-b border-zinc-200 pb-4">
+        <div className="border-2 border-black bg-[#FFFEFA] p-6 sm:p-9 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b-2 border-black pb-4">
             <div>
-              <span className="text-xs uppercase tracking-widest font-bold text-zinc-400">Hasil Simulasi</span>
-              <h3 className="text-xl sm:text-2xl font-black text-zinc-900 mt-0.5">
+              <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
+                OFFICIAL RATE SHEET // {rates.length} LAYANAN TERSEDIA
+              </span>
+              <h2 className="text-xl sm:text-3xl font-black text-black uppercase mt-0.5">
                 {origin} &rarr; {destination}
-              </h3>
+              </h2>
             </div>
-            <span className="text-xs font-semibold px-3 py-1 bg-zinc-100 text-zinc-800 rounded-full font-mono">
-              {weight} Kg
-            </span>
+            <div className="bg-black text-white px-3 py-1 text-xs font-black self-start sm:self-auto">
+              MASS: {weight} KG
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          {/* Tabular Rate Manifest */}
+          <div className="border border-black divide-y divide-black bg-white">
             {rates.map((r, i) => (
               <div
                 key={i}
-                className="p-5 rounded-xl border border-zinc-200 hover:border-zinc-300 bg-zinc-50/50 hover:bg-white transition-all space-y-2.5 flex flex-col justify-between"
+                className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-zinc-50 transition-colors"
               >
-                <div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold uppercase tracking-wider text-zinc-500 font-mono">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="bg-zinc-900 text-white text-[10px] font-black px-1.5 py-0.5 tracking-wider uppercase">
                       {r.courier}
                     </span>
                     {r.etd && (
-                      <span className="text-xs font-mono font-medium text-zinc-600 bg-white px-2 py-0.5 rounded border border-zinc-200">
-                        {r.etd} hari
+                      <span className="text-[11px] font-bold text-zinc-600 border border-zinc-300 px-1.5 py-0.5">
+                        ETA: {r.etd} HARI
                       </span>
                     )}
                   </div>
-                  <h4 className="text-base font-bold text-zinc-900 mt-1">
+                  <h3 className="text-sm sm:text-base font-black text-black uppercase tracking-wide">
                     {r.service}
-                  </h4>
+                  </h3>
                   {r.description && (
-                    <p className="text-xs text-zinc-500 line-clamp-1">{r.description}</p>
+                    <p className="text-xs text-zinc-500 uppercase">{r.description}</p>
                   )}
                 </div>
 
-                <div className="pt-2 border-t border-zinc-200/60 flex items-baseline justify-between">
-                  <span className="text-xs text-zinc-400 font-medium">Tarif</span>
-                  <span className="text-2xl font-black font-mono tracking-tight text-zinc-900">
-                    Rp {r.cost.toLocaleString("id-ID")}
-                  </span>
+                <div className="text-left sm:text-right border-t sm:border-t-0 border-zinc-200 pt-2 sm:pt-0">
+                  <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">HARGA RESMI</div>
+                  <div className="text-2xl sm:text-3xl font-black text-black tracking-tight">
+                    RP {r.cost.toLocaleString("id-ID")}
+                  </div>
                 </div>
               </div>
             ))}
+          </div>
+
+          {/* Thermal Perforation */}
+          <div className="pt-4 border-t-2 border-dashed border-zinc-400 flex items-center justify-between text-[10px] text-zinc-400 font-bold">
+            <span>--- QUOTATION SHEET // VERIFIED ---</span>
+            <span>RATES BY COURIER DIRECT</span>
           </div>
         </div>
       )}

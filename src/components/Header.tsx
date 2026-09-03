@@ -1,28 +1,36 @@
 import Link from "next/link";
-import { Package } from "lucide-react";
 
 export function Header() {
   return (
-    <header className="border-b border-zinc-200 bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-zinc-900 flex items-center justify-center text-white">
-            <Package className="w-4 h-4" />
+    <header className="border-b border-black bg-[#F4F4F0] text-black font-mono text-xs select-none">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-12 flex items-center justify-between">
+        {/* Brand Industrial Badge */}
+        <Link href="/" className="flex items-center gap-3 group">
+          <div className="bg-black text-white px-2 py-0.5 font-bold tracking-widest text-[11px]">
+            OBROOL
           </div>
-          <div className="flex items-baseline gap-1.5">
-            <span className="text-sm font-semibold text-zinc-900 tracking-tight">Cek Resi & Ongkir</span>
-            <span className="text-xs text-zinc-400 font-normal">by Obrool</span>
+          <div className="flex items-center gap-1.5 font-bold tracking-wider text-zinc-800">
+            <span>MANIFEST // EKSPEDISI</span>
+            <span className="hidden sm:inline text-zinc-400 font-normal">[ID-LOGISTICS]</span>
           </div>
         </Link>
 
-        <a
-          href="https://obrool.com"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-xs text-zinc-500 hover:text-zinc-900 transition-colors"
-        >
-          obrool.com
-        </a>
+        {/* System Telemetry & External Link */}
+        <div className="flex items-center gap-4 text-[11px]">
+          <div className="hidden md:flex items-center gap-2 text-zinc-600">
+            <span className="w-2 h-2 bg-emerald-600 rounded-none inline-block animate-pulse" />
+            <span className="font-semibold">SYS.STATUS: OPERATIONAL</span>
+          </div>
+
+          <a
+            href="https://obrool.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="border border-black px-2.5 py-1 font-bold hover:bg-black hover:text-white transition-colors tracking-wider"
+          >
+            OBROOL.COM &rarr;
+          </a>
+        </div>
       </div>
     </header>
   );
