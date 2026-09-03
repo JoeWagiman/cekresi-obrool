@@ -14,7 +14,7 @@ export async function POST(request: Request) {
 
     const apiKey =
       process.env.BINDERBYTE_API_KEY ||
-      "c3ce564998ee62ea46fb1f00889cbf4ca8c7752e50c406ee3778508a5ba037bf";
+      "sk_sq00lz6ufwyrbnb16jt0mfuhlekkwauv5cogfgsh4wxwrn4np8xqbmoxzhtravw6";
 
     const couriersToQuery = courier ? [courier] : ["jne", "jnt", "sicepat", "pos", "tiki", "wahana"];
     const results: Array<{ courier: string; service: string; description: string; cost: number; etd: string }> = [];
