@@ -343,92 +343,70 @@ export async function resolveBinderbyteLocation(
     return { id: trimmed, label: trimmed };
   }
 
-  // 0. Cek Kemendagri grounding terlebih dahulu jika query memiliki lebih dari 1 kata kunci wilayah
-  // (misal: "Balamoa Tegal" -> mencocokkan Desa Balamoa di Kab. Tegal daripada menebak Tegal Barat)
-  const cleanTokens = trimmed
-    .replace(/[,\.;:!?]/g, " ")
-    .replace(/\b(dari|ke|di|ongkir|tarif|paket|berat|kg|kilo|gram)\b/gi, " ")
-    .trim()
-    .split(/\s+/)
-    .filter((w) => w.length >= 3);
-
-  if (cleanTokens.length > 1) {
-    const localMatches = await lookupIndonesianRegion(trimmed);
-    if (localMatches.length > 0 && (localMatches[0].score || 0) >= 3) {
-      const best = localMatches[0];
-      if (best.districtCode) {
-        return {
-          id: `district_${best.districtCode}`,
-          label: `${best.villageName ? best.villageName + ", " : ""}${best.districtName}, ${best.regencyName}`,
-        };
-      }
-    }
-  }
-
-  // 1. Prioritaskan mesin geocoding cerdas Kemendagri lokal (0ms) yang 100% akurat tingkat kecamatan
-  const smart = await smartResolveLocation(rawText);
-  if (smart) {
-    return smart;
-  }
-
-  const clean = rawText
+  const clean = trimmed
     .replace(/[,\.;:!?]/g, " ")
     .replace(/\b(dari|ke|di|ongkir|tarif|paket|berat|kg|kilo|gram)\b/gi, " ")
     .replace(/\s+/g, " ")
     .trim();
-  const normalized = normalizeCityTypo(clean);
-  const stripped = stripProvinceSuffix(clean);
-  const strippedNormalized = stripProvinceSuffix(normalized);
-  const candidates = Array.from(new Set([clean, normalized, stripped, strippedNormalized])).filter(Boolean);
 
-  // 1. Coba cari ke endpoint Binderbyte /v1/locations untuk setiap candidate
-  for (const query of candidates) {
+  const headers = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Accept": "application/json",
+  };
+
+  const searchBinderbyte = async (q: string) => {
     try {
-      const url = `${getBaseUrl()}/locations?search=${encodeURIComponent(query)}&api_key=${apiKey}`;
-      const res = await fetch(url);
+      const url = `${getBaseUrl()}/locations?search=${encodeURIComponent(q)}&api_key=${apiKey}`;
+      const res = await fetch(url, { headers });
       const json = await res.json().catch(() => null);
-
       if (json?.code === "200" && Array.isArray(json.data) && json.data.length > 0) {
-        // Urutkan berdasarkan relevansi query dan prioritaskan district
-        const sorted = [...json.data].sort((a, b) => scoreLocationItem(b, query) - scoreLocationItem(a, query));
-        const best = sorted[0];
-        let targetId = best.id;
-        if (targetId.startsWith("village_")) {
-          const parts = targetId.replace("village_", "").split(".");
-          if (parts.length >= 3) {
-            targetId = `district_${parts.slice(0, 3).join(".")}`;
-          }
-        }
-        return {
-          id: targetId,
-          label: best.label,
-        };
+        return json.data;
       }
     } catch (err) {
       console.warn("[Binderbyte Location Lookup Warning]", err);
     }
-  }
+    return [];
+  };
 
-  // 2. Fallback via database lokal Kemendagri
-  for (const query of candidates) {
-    const localMatches = await lookupIndonesianRegion(query);
-    if (localMatches.length > 0) {
-      const bestMatch = localMatches.find((m) => m.level === "regency" || m.level === "district") || localMatches[0];
-      // Ekspedisi Indonesia (Binderbyte/RajaOngkir) menghitung tarif berbasis kecamatan (district) atau kabupaten/kota (city).
-      // Jika input pengguna adalah level desa/kelurahan (seperti 'Balamoa'), gunakan kode kecamatannya (districtCode).
-      if (bestMatch.districtCode) {
-        return {
-          id: `district_${bestMatch.districtCode}`,
-          label: bestMatch.formatted,
-        };
-      }
-      if (bestMatch.regencyCode) {
-        return {
-          id: `city_${bestMatch.regencyCode}`,
-          label: bestMatch.formatted,
-        };
+  // 1. Coba pencarian query utuh via API Binderbyte (80ms)
+  let candidates = await searchBinderbyte(clean);
+
+  // 2. Jika multi-kata (misal: "Balamoa Tegal"), cari kata per kata
+  // dan cocokkan dengan kata lainnya di label hasil (misal Balamoa -> Balamoa, Pangkah, Tegal)
+  if (candidates.length === 0 && clean.includes(" ")) {
+    const words = clean.split(/\s+/).filter((w) => w.length >= 3);
+    for (const w of words) {
+      const sub = await searchBinderbyte(w);
+      if (sub.length > 0) {
+        const matched = sub.find((item: any) => {
+          const lLower = (item.label || "").toLowerCase();
+          return words.every((word) => lLower.includes(word.toLowerCase()));
+        }) || sub[0];
+        candidates = [matched];
+        break;
       }
     }
+  }
+
+  if (candidates.length > 0) {
+    const best = candidates[0];
+    let targetId = best.id;
+    if (targetId.startsWith("village_")) {
+      const parts = targetId.replace("village_", "").split(".");
+      if (parts.length >= 3) {
+        targetId = `district_${parts.slice(0, 3).join(".")}`;
+      }
+    }
+    return {
+      id: targetId,
+      label: best.label,
+    };
+  }
+
+  // 3. Fallback via smart geocoding lokal jika offline / network error
+  const smart = await smartResolveLocation(clean).catch(() => null);
+  if (smart) {
+    return smart;
   }
 
   return null;
@@ -480,7 +458,7 @@ export async function checkShippingCost(
   await Promise.all(
     uniqueCouriers.map(async (c) => {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 6000);
+      const timeoutId = setTimeout(() => controller.abort(), 4500);
 
       try {
         const params = new URLSearchParams();
@@ -493,6 +471,10 @@ export async function checkShippingCost(
         const res = await fetch(`${getBaseUrl()}/cost`, {
           method: "POST",
           body: params,
+          headers: {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Accept": "application/json",
+          },
           signal: controller.signal,
         });
         clearTimeout(timeoutId);
