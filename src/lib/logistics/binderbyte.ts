@@ -349,6 +349,12 @@ export async function resolveBinderbyteLocation(
     .replace(/\s+/g, " ")
     .trim();
 
+  // 1. Prioritaskan grounding kota-kota besar / hub logistik utama Indonesia (0ms)
+  const smart = await smartResolveLocation(clean).catch(() => null);
+  if (smart) {
+    return smart;
+  }
+
   const headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
     "Accept": "application/json",
@@ -368,7 +374,7 @@ export async function resolveBinderbyteLocation(
     return [];
   };
 
-  // 1. Coba pencarian query utuh via API Binderbyte (80ms)
+  // 2. Coba pencarian query utuh via API Binderbyte (80ms)
   let candidates = await searchBinderbyte(clean);
 
   // 2. Jika multi-kata (misal: "Balamoa Tegal"), cari kata per kata
@@ -401,12 +407,6 @@ export async function resolveBinderbyteLocation(
       id: targetId,
       label: best.label,
     };
-  }
-
-  // 3. Fallback via smart geocoding lokal jika offline / network error
-  const smart = await smartResolveLocation(clean).catch(() => null);
-  if (smart) {
-    return smart;
   }
 
   return null;
