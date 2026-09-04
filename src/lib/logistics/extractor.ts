@@ -145,7 +145,7 @@ export function extractLogisticsIntent(message: string, previousAgentMessage?: s
     let origin = "Jakarta";
     let destination = "";
 
-    const cleanWordRegex = /\b(berapa|berat|seberat|kira-kira|estimasi|dengan|kak|min|gan|ya|tolong|dong|cek|ongkir|onkir|ongkr|ogkir|ongkos|tarif|traif|biaya|kirim|paket)\b|[?,.;:!]/gi;
+    const cleanWordRegex = /\b(berapa|berat|seberat|kira-kira|estimasi|dengan|kak|min|gan|ya|tolong|dong|cek|ongkir|onkir|ongkr|ogkir|ongkos|tarif|traif|biaya|kirim|paket|dari|dr|dri|asal|tujuan)\b|[?,.;:!]/gi;
 
     // Pola 1: "[dari] [kota] ke [kota]" (kata "dari" bersifat opsional jika ada kata "ke")
     const dariKeMatch = text.match(/(?:(?:\bdari\b|\bdr\b|\bdri\b)\s+)?([a-zA-Z\s]+?)\s+(?:\bke\b|\bk\b)\s+([a-zA-Z\s]+?)(?:,\s*berat|\s+\d+\s*(?:kg|kilo|gram|gr)|\s+berat|\s*$)/i);
@@ -173,6 +173,9 @@ export function extractLogisticsIntent(message: string, previousAgentMessage?: s
         destination = keMatch[1].replace(cleanWordRegex, " ").replace(/^[,\s.-]+|[,\s.-]+$/g, "").trim();
       }
     }
+
+    origin = origin.replace(/^(?:dari|dr|dri|asal)\s+/i, "").trim();
+    destination = destination.replace(/^(?:ke|k|tujuan)\s+/i, "").trim();
 
     // Normalisasi typo dan singkatan kota (pwt => Purwokerto, sby => Surabaya, jogja => Yogyakarta, dll)
     if (origin) origin = normalizeCityTypo(origin);

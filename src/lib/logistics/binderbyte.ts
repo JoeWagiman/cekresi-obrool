@@ -124,7 +124,8 @@ function getApiKey(): string | undefined {
   return (
     process.env.BINDERBYTE_API_KEY ||
     process.env.BINDERHUB_API_KEY ||
-    process.env.BINDER_API_KEY
+    process.env.BINDER_API_KEY ||
+    "sk_sq00lz6ufwyrbnb16jt0mfuhlekkwauv5cogfgsh4wxwrn4np8xqbmoxzhtravw6"
   );
 }
 
@@ -336,7 +337,35 @@ export async function resolveBinderbyteLocation(
   rawText: string,
   apiKey: string
 ): Promise<{ id: string; label: string } | null> {
-  // 0. Prioritaskan mesin geocoding cerdas Kemendagri lokal (0ms) yang 100% akurat tingkat kecamatan
+  if (!rawText) return null;
+  const trimmed = rawText.trim();
+  if (trimmed.startsWith("district_") || trimmed.startsWith("city_")) {
+    return { id: trimmed, label: trimmed };
+  }
+
+  // 0. Cek Kemendagri grounding terlebih dahulu jika query memiliki lebih dari 1 kata kunci wilayah
+  // (misal: "Balamoa Tegal" -> mencocokkan Desa Balamoa di Kab. Tegal daripada menebak Tegal Barat)
+  const cleanTokens = trimmed
+    .replace(/[,\.;:!?]/g, " ")
+    .replace(/\b(dari|ke|di|ongkir|tarif|paket|berat|kg|kilo|gram)\b/gi, " ")
+    .trim()
+    .split(/\s+/)
+    .filter((w) => w.length >= 3);
+
+  if (cleanTokens.length > 1) {
+    const localMatches = await lookupIndonesianRegion(trimmed);
+    if (localMatches.length > 0 && (localMatches[0].score || 0) >= 3) {
+      const best = localMatches[0];
+      if (best.districtCode) {
+        return {
+          id: `district_${best.districtCode}`,
+          label: `${best.villageName ? best.villageName + ", " : ""}${best.districtName}, ${best.regencyName}`,
+        };
+      }
+    }
+  }
+
+  // 1. Prioritaskan mesin geocoding cerdas Kemendagri lokal (0ms) yang 100% akurat tingkat kecamatan
   const smart = await smartResolveLocation(rawText);
   if (smart) {
     return smart;
@@ -378,12 +407,8 @@ export async function resolveBinderbyteLocation(
     const localMatches = await lookupIndonesianRegion(query);
     if (localMatches.length > 0) {
       const bestMatch = localMatches.find((m) => m.level === "regency" || m.level === "district") || localMatches[0];
-      if (bestMatch.level === "village" && bestMatch.villageCode) {
-        return {
-          id: `village_${bestMatch.villageCode}`,
-          label: bestMatch.formatted,
-        };
-      }
+      // Ekspedisi Indonesia (Binderbyte/RajaOngkir) menghitung tarif berbasis kecamatan (district) atau kabupaten/kota (city).
+      // Jika input pengguna adalah level desa/kelurahan (seperti 'Balamoa'), gunakan kode kecamatannya (districtCode).
       if (bestMatch.districtCode) {
         return {
           id: `district_${bestMatch.districtCode}`,
@@ -412,9 +437,9 @@ export async function checkShippingCost(
   weightGrams: number = 1000
 ): Promise<ShippingCostResult> {
   const courier = normalizeCourier(rawCourier);
-  const cacheKey = `${courier.code}:${origin.toLowerCase()}:${destination.toLowerCase()}:${weightGrams}`;
+  const cacheKey = `${courier.code}:${origin.trim().toLowerCase()}:${destination.trim().toLowerCase()}:${weightGrams}`;
 
-  // 1. Cek Cache
+  // 1. Cek In-Memory Cache
   const cached = costCache.get(cacheKey);
   if (cached && cached.expiresAt > Date.now()) {
     return { ...cached.data, fromCache: true };
