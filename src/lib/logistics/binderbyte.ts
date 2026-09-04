@@ -392,8 +392,15 @@ export async function resolveBinderbyteLocation(
         // Urutkan berdasarkan relevansi query dan prioritaskan district
         const sorted = [...json.data].sort((a, b) => scoreLocationItem(b, query) - scoreLocationItem(a, query));
         const best = sorted[0];
+        let targetId = best.id;
+        if (targetId.startsWith("village_")) {
+          const parts = targetId.replace("village_", "").split(".");
+          if (parts.length >= 3) {
+            targetId = `district_${parts.slice(0, 3).join(".")}`;
+          }
+        }
         return {
-          id: best.id,
+          id: targetId,
           label: best.label,
         };
       }
